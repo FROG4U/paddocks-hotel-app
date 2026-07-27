@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getSettings, parseHours } from "@/lib/data";
 
 export default async function SiteFooter() {
@@ -41,7 +40,7 @@ export default async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-white/10 py-5 text-center text-xs text-white/60">
-        {s.footerNote} · <Link href="/admin" className="hover:text-white">Admin</Link>
+        {s.footerNote}
       </div>
     </footer>
   );
