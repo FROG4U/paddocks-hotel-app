@@ -1,0 +1,108 @@
+// The Paddocks Hotel — database schema (SQLite)
+// Everything editable from /admin lives here. Public pages render with
+// `force-dynamic`, so edits appear on the live site instantly (no rebuild).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Admin login ──
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ── Global site settings: contact, hours, social, brand (single row id=1) ──
+model SiteSettings {
+  id       Int    @id @default(1)
+
+  siteName String @default("The Paddocks Hotel")
+  tagline  String @default("In the heart of Ross-on-Wye")
+  logoUrl  String @default("/brand/logo.png")
+
+  // Brand colours
+  navyColor   String @default("#0a416c")
+  accentColor String @default("#e23125")
+  goldColor   String @default("#c9a24b")
+  buttonColor String @default("#c9a97c")
+
+  // Contact
+  addressLine1 String @default("The Paddocks Hotel, Wye View Lane")
+  addressLine2 String @default("Symonds Yat West")
+  town         String @default("Ross-on-Wye")
+  postcode     String @default("HR9 6BL")
+  phone        String @default("01600 890 246")
+  email        String @default("info@paddockshotel.com")
+  mapQuery     String @default("The Paddocks Hotel, Wye View Ln, Symonds Yat West, Ross-on-Wye HR9 6BL")
+
+  // Opening hours (one line per day-range)
+  hoursJson String @default("[{\"label\":\"Mon–Fri\",\"value\":\"5pm – 10.30pm\"},{\"label\":\"Saturday\",\"value\":\"5pm – 11.00pm\"}]")
+
+  // Social links
+  facebookUrl  String @default("https://facebook.com")
+  instagramUrl String @default("https://instagram.com")
+
+  // Booking call-to-action
+  bookCtaLabel String @default("Book a Room")
+  bookCtaHref  String @default("/contact")
+
+  // SEO defaults + footer
+  metaTitle       String @default("The Paddocks Hotel — Ross-on-Wye")
+  metaDescription String @default("The Paddocks Hotel & Indian Restaurant in the heart of Ross-on-Wye. Rooms, weddings, celebrations, dining and more.")
+  footerNote      String @default("© The Paddocks Hotel. All rights reserved.")
+
+  updatedAt DateTime @updatedAt
+}
+
+// ── Content pages (home, weddings, celebrations, dance, meeting, bar, contact) ──
+// navGroup controls the dropdown a page appears under: "" | "explore" | "food"
+model Page {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  title     String                        // admin-facing label
+  navLabel  String  @default("")          // menu text (blank = hidden from nav)
+  navGroup  String  @default("")          // "", "explore", "food"
+  order     Int     @default(0)
+  showInNav Boolean @default(true)
+
+  heroEyebrow  String @default("")
+  heroTitle    String @default("")
+  heroSubtitle String @default("")
+  heroImage    String @default("")
+
+  // Repeatable content blocks: [{heading, body, image, imageSide}]
+  sectionsJson String @default("[]")
+
+  metaTitle       String @default("")
+  metaDescription String @default("")
+
+  updatedAt DateTime @updatedAt
+}
+
+// ── Rooms (appear under the "Our Rooms" dropdown; each is its own page) ──
+model Room {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  order       Int     @default(0)
+  heroEyebrow String  @default("Book Our")
+  heroImage   String  @default("")
+  shortDesc   String  @default("")
+  description String  @default("")
+  price       String  @default("")
+  showPrice   Boolean @default(true)
+
+  metaTitle       String @default("")
+  metaDescription String @default("")
+
+  updatedAt DateTime @updatedAt
+}
