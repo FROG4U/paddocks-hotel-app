@@ -9,9 +9,10 @@ const ADMIN_PASSWORD = "Paddocks2026!";
 async function main() {
   // ── Admin ──
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  // update: {} — never overwrite an existing admin's password on re-seed / redeploy.
   await prisma.admin.upsert({
     where: { email: ADMIN_EMAIL },
-    update: { passwordHash },
+    update: {},
     create: { email: ADMIN_EMAIL, name: "Paddocks Admin", passwordHash },
   });
 
