@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Roboto_Slab } from "next/font/google";
 import "./globals.css";
-import { getSettings } from "@/lib/data";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -14,14 +13,14 @@ const slab = Roboto_Slab({
   variable: "--font-slab",
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const s = await getSettings();
-  return {
-    title: s.metaTitle,
-    description: s.metaDescription,
-    icons: { icon: s.logoUrl },
-  };
-}
+// Static default metadata (no DB) so the build never needs a database.
+// Per-page + site-wide dynamic titles come from the (public) layout & pages.
+export const metadata: Metadata = {
+  title: "The Paddocks Hotel — Ross-on-Wye",
+  description:
+    "The Paddocks Hotel & Indian Restaurant in the heart of Ross-on-Wye. Rooms, weddings, celebrations, dining and more.",
+  icons: { icon: "/brand/logo.png" },
+};
 
 export default function RootLayout({
   children,
