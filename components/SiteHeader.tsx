@@ -23,8 +23,8 @@ export default function SiteHeader({ nav, logoUrl, siteName, ctaLabel, ctaHref }
         {/* Logo */}
         <div className="flex justify-center pt-4 pb-2">
           <Link href="/" aria-label={siteName}>
-            <Image src={logoUrl} alt={siteName} width={150} height={90}
-              className="h-16 w-auto object-contain" priority />
+            <Image src={logoUrl} alt={siteName} width={207} height={120}
+              className="h-20 w-auto object-contain" priority />
           </Link>
         </div>
 

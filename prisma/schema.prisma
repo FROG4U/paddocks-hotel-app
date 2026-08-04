@@ -41,7 +41,7 @@ model SiteSettings {
   town         String @default("Ross-on-Wye")
   postcode     String @default("HR9 6BL")
   phone        String @default("01600 890 246")
-  email        String @default("info@paddockshotel.com")
+  email        String @default("reception@paddockshotel.com")
   mapQuery     String @default("The Paddocks Hotel, Wye View Ln, Symonds Yat West, Ross-on-Wye HR9 6BL")
 
   // Opening hours (one line per day-range)

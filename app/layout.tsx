@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Poppins, Roboto_Slab } from "next/font/google";
+import { Poppins } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -7,10 +8,16 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
 });
-const slab = Roboto_Slab({
-  subsets: ["latin"],
-  weight: ["400", "700", "800", "900"],
+
+// Copperplate — the Paddocks brand heading font (from Copperplate.ttc).
+const copperplate = localFont({
+  src: [
+    { path: "../public/fonts/copperplate-1.woff2", weight: "300", style: "normal" },
+    { path: "../public/fonts/copperplate-0.woff2", weight: "400", style: "normal" },
+    { path: "../public/fonts/copperplate-2.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-slab",
+  display: "swap",
 });
 
 // Static default metadata (no DB) so the build never needs a database.
@@ -26,7 +33,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={`${poppins.variable} ${slab.variable} h-full antialiased`}>
+    <html lang="en-GB" className={`${poppins.variable} ${copperplate.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
