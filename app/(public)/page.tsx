@@ -66,7 +66,7 @@ export default async function HomePage() {
             <Image src="/uploads/king-room.jpg" alt="The Paddocks Hotel" fill className="object-cover" sizes="(max-width:768px) 100vw, 50vw" />
           </div>
           <div>
-            <p className="nav-link text-accent">Welcome to</p>
+            <p className="nav-link text-gold">Welcome to</p>
             <h2 className="font-display text-4xl text-navy mt-2 mb-6">The Paddocks Hotel</h2>
             <p className="text-lg leading-relaxed text-ink/80">{welcomeText}</p>
             <Link href="/contact" className="inline-block mt-8 bg-navy text-white nav-link px-8 py-3.5 rounded-sm hover:bg-navy/90">
@@ -81,7 +81,7 @@ export default async function HomePage() {
         <section className="py-16 sm:py-24 bg-cream">
           <div className="mx-auto max-w-6xl px-6">
             <div className="text-center mb-12">
-              <p className="nav-link text-accent">Book our rooms</p>
+              <p className="nav-link text-gold">Book our rooms</p>
               <h2 className="font-display text-4xl sm:text-5xl text-navy mt-2">Relax &amp; Unwind</h2>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -95,8 +95,8 @@ export default async function HomePage() {
                   </div>
                   <div className="p-5 text-center">
                     <h3 className="font-display text-2xl text-navy">{r.name}</h3>
-                    {r.showPrice && r.price && <p className="text-accent font-semibold mt-1">{r.price}</p>}
-                    <span className="nav-link text-tan mt-3 inline-block group-hover:text-accent">View Room →</span>
+                    {r.showPrice && r.price && <p className="text-gold font-semibold mt-1">{r.price}</p>}
+                    <span className="nav-link text-tan mt-3 inline-block group-hover:text-gold">View Room →</span>
                   </div>
                 </Link>
               ))}
@@ -143,7 +143,7 @@ export default async function HomePage() {
       <section className="py-16 sm:py-24 bg-cream">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-12">
-            <p className="nav-link text-accent">The Paddocks</p>
+            <p className="nav-link text-gold">The Paddocks</p>
             <h2 className="font-display text-4xl text-navy mt-2">At a Glance</h2>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 text-center">
@@ -176,9 +176,9 @@ function FeatureBanner({ image, eyebrow, title, text, ctaLabel, ctaHref }: {
     <section className="relative">
       <div className="absolute inset-0">
         <Image src={image} alt={title} fill className="object-cover" sizes="100vw" />
-        <div className="absolute inset-0 bg-navy/70" />
+        <div className="absolute inset-0 bg-black/35" />
       </div>
-      <div className="relative mx-auto max-w-4xl px-6 py-24 sm:py-32 text-center text-white">
+      <div className="relative mx-auto max-w-4xl px-6 py-24 sm:py-32 text-center text-white [text-shadow:0_2px_10px_rgba(0,0,0,.55)]">
         <p className="nav-link text-gold">{eyebrow}</p>
         <h2 className="hero-title text-4xl sm:text-6xl my-4">{title}</h2>
         <p className="text-lg text-white/90 max-w-2xl mx-auto">{text}</p>

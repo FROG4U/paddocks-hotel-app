@@ -31,10 +31,11 @@ body {
 .font-display { font-family: var(--font-slab), Georgia, serif; }
 
 .nav-link {
-  letter-spacing: 0.08em;
+  font-family: var(--font-slab), Georgia, serif; /* Copperplate brand font */
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 400;
+  font-size: 0.85rem;
 }
 
 .hero-title {

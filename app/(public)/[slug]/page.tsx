@@ -74,8 +74,8 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
                 {s.addressLine1}<br />{s.addressLine2}<br />{s.town} {s.postcode}
               </address>
               <div className="mt-6 space-y-1 text-lg">
-                <p><span className="text-accent font-semibold">Tel:</span> <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="hover:text-navy">{s.phone}</a></p>
-                <p><span className="text-accent font-semibold">Email:</span> <a href={`mailto:${s.email}`} className="hover:text-navy">{s.email}</a></p>
+                <p><span className="text-gold font-semibold">Tel:</span> <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="hover:text-navy">{s.phone}</a></p>
+                <p><span className="text-gold font-semibold">Email:</span> <a href={`mailto:${s.email}`} className="hover:text-navy">{s.email}</a></p>
               </div>
             </div>
             <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden shadow">

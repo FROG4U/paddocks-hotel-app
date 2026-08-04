@@ -46,7 +46,7 @@ export default function SiteHeader({ nav, logoUrl, siteName, ctaLabel, ctaHref }
                     {item.children.map((c) => (
                       <li key={c.href}>
                         <Link href={c.href}
-                          className="block px-5 py-2.5 text-sm whitespace-nowrap hover:bg-cream hover:text-accent transition-colors">
+                          className="block px-5 py-2.5 text-sm whitespace-nowrap hover:bg-cream hover:text-gold transition-colors">
                           {c.label}
                         </Link>
                       </li>
@@ -101,7 +101,7 @@ export default function SiteHeader({ nav, logoUrl, siteName, ctaLabel, ctaHref }
                         {item.children.map((c) => (
                           <li key={c.href}>
                             <Link href={c.href} onClick={() => setOpen(false)}
-                              className="block px-9 py-3 text-sm text-ink hover:text-accent">
+                              className="block px-9 py-3 text-sm text-ink hover:text-gold">
                               {c.label}
                             </Link>
                           </li>

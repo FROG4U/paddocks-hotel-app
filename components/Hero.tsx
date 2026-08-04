@@ -17,7 +17,7 @@ export default function Hero({ eyebrow, title, subtitle, image, ctaLabel, ctaHre
         size === "full" ? "min-h-[82vh]" : "min-h-[62vh]"
       }`}
       style={{
-        backgroundImage: `linear-gradient(rgba(10,25,45,.45), rgba(10,25,45,.55))${image ? `, url(${image})` : ""}`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,.30), rgba(0,0,0,.42))${image ? `, url(${image})` : ""}`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundColor: "#0a416c",
