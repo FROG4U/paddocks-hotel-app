@@ -5,6 +5,14 @@ import { getPage, getSettings, parseSections } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+const QUICK = [
+  { icon: "/icons/gold-bed.png", label: "Stay", href: "/rooms/king-room" },
+  { icon: "/icons/gold-dine.png", label: "Dine", href: "/bar" },
+  { icon: "/icons/gold-meeting.png", label: "Meet", href: "/meeting-room" },
+  { icon: "/icons/gold-celebrate.png", label: "Celebrate", href: "/celebrations" },
+  { icon: "/icons/gold-marry.png", label: "Marry", href: "/weddings" },
+];
+
 const EAT = [
   { title: "Restaurant", img: "/uploads/restaurant.jpg" },
   { title: "Bar & Lounge", img: "/uploads/bar.jpg" },
@@ -12,10 +20,10 @@ const EAT = [
 ];
 
 const GLANCE = [
-  { icon: "/icons/bed.png", title: "Rooms" },
-  { icon: "/icons/tree.png", title: "Garden Space" },
-  { icon: "/icons/location.png", title: "Location" },
-  { icon: "/icons/parking.png", title: "Parking" },
+  { icon: "/icons/gold-bedroom.png", title: "Rooms" },
+  { icon: "/icons/gold-tree.png", title: "Garden Space" },
+  { icon: "/icons/gold-location.png", title: "Location" },
+  { icon: "/icons/gold-parking.png", title: "Parking" },
 ];
 
 const WELCOME_TEXT =
@@ -39,60 +47,71 @@ export default async function HomePage() {
         size="full"
       />
 
-      {/* 2 — Welcome (plain centred text) */}
-      <section className="py-20 sm:py-28 bg-cream">
+      {/* 2 — Quick links strip */}
+      <section className="bg-navy">
+        <div className="mx-auto max-w-5xl px-6 grid grid-cols-5">
+          {QUICK.map((q) => (
+            <Link key={q.label} href={q.href}
+              className="flex flex-col items-center gap-3 py-8 hover:bg-white/5 transition">
+              <Image src={q.icon} alt="" width={52} height={52} className="h-12 w-12 object-contain" />
+              <span className="nav-link text-gold text-xs sm:text-sm">{q.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 3 — Welcome (plain centred text) */}
+      <section className="py-20 sm:py-28 bg-white">
         <div className="mx-auto max-w-3xl px-6 text-center">
-          <p className="nav-link text-gold">Welcome to</p>
-          <h2 className="font-display text-3xl sm:text-5xl text-navy mt-3 mb-8">The Paddocks Hotel</h2>
+          <p className="text-navy font-semibold text-lg sm:text-xl mb-3">Welcome to</p>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold mb-8">The Paddocks Hotel</h2>
           <p className="text-lg leading-relaxed text-ink/80">{welcomeText}</p>
         </div>
       </section>
 
-      {/* 3 — Relax & Unwind (image banner) */}
+      {/* 4 — Relax & Unwind (image banner) */}
       <FeatureBanner
         image="/uploads/king-room.jpg" eyebrow="Book our rooms" title="Relax & Unwind"
         ctaLabel="Book Now" ctaHref={s.bookCtaHref} />
 
-      {/* 4 — Eat & Drink (3 columns) */}
-      <section className="py-16 sm:py-24 bg-white">
+      {/* 5 — Eat & Drink (3 columns) */}
+      <section className="py-16 sm:py-24 bg-cream">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-navy text-center mb-12">Eat &amp; Drink</h2>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center mb-12">Eat &amp; Drink</h2>
           <div className="grid gap-8 md:grid-cols-3">
             {EAT.map((e) => (
               <div key={e.title} className="text-center">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden shadow-md mb-5">
+                <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-md mb-5">
                   <Image src={e.img} alt={e.title} fill className="object-cover" sizes="(max-width:768px) 100vw, 33vw" />
                 </div>
-                <h3 className="font-display text-2xl text-navy">{e.title}</h3>
+                <h3 className="nav-link text-gold text-base">{e.title}</h3>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 5 — Weddings (image banner) */}
+      {/* 6 — Weddings (image banner) */}
       <FeatureBanner
         image="/uploads/weddings.jpg" eyebrow="Celebrate" title="Weddings"
         ctaLabel="Discover Now" ctaHref="/weddings" />
 
-      {/* 6 — At a Glance (icon row) */}
-      <section className="py-16 sm:py-24 bg-cream">
+      {/* 7 — At a Glance (icon row) */}
+      <section className="py-16 sm:py-24 bg-white">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-navy text-center mb-14">At a Glance</h2>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center mb-14">At a Glance</h2>
           <div className="grid gap-10 grid-cols-2 lg:grid-cols-4 text-center">
             {GLANCE.map((g) => (
               <div key={g.title}>
-                <div className="mx-auto w-24 h-24 rounded-full bg-navy grid place-items-center mb-5">
-                  <Image src={g.icon} alt="" width={44} height={44} className="h-11 w-11 object-contain brightness-0 invert" />
-                </div>
-                <h3 className="font-display text-xl text-navy">{g.title}</h3>
+                <Image src={g.icon} alt="" width={72} height={72} className="h-16 w-16 object-contain mx-auto mb-4" />
+                <h3 className="nav-link text-navy text-sm">{g.title}</h3>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 7 — Corporate & Private Events (image banner) */}
+      {/* 8 — Corporate & Private Events (image banner) */}
       <FeatureBanner
         image="/uploads/corporate.jpg" eyebrow="Celebrate" title="Corporate & Private Events"
         ctaLabel="Discover Now" ctaHref="/meeting-room" />
