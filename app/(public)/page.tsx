@@ -19,11 +19,12 @@ const EAT = [
   { title: "Afternoon Tea", img: "/uploads/afternoon-tea.jpg" },
 ];
 
+const GLANCE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.";
 const GLANCE = [
-  { icon: "/icons/gold-bedroom.png", title: "Rooms" },
-  { icon: "/icons/gold-tree.png", title: "Garden Space" },
-  { icon: "/icons/gold-location.png", title: "Location" },
-  { icon: "/icons/gold-parking.png", title: "Parking" },
+  { icon: "/icons/gold-bedroom.png", title: "Bed Rooms", text: GLANCE_TEXT },
+  { icon: "/icons/gold-tree.png", title: "Garden Space", text: GLANCE_TEXT },
+  { icon: "/icons/gold-location.png", title: "Location", text: GLANCE_TEXT },
+  { icon: "/icons/gold-parking.png", title: "Parking", text: GLANCE_TEXT },
 ];
 
 const WELCOME_TEXT =
@@ -64,7 +65,7 @@ export default async function HomePage() {
       <section className="py-20 sm:py-28 bg-white">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <p className="text-navy font-semibold text-lg sm:text-xl mb-3">Welcome to</p>
-          <h2 className="font-display text-3xl sm:text-5xl text-gold mb-8">The Paddocks Hotel</h2>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold uppercase mb-8">The Paddocks Hotel</h2>
           <p className="text-lg leading-relaxed text-ink/80">{welcomeText}</p>
         </div>
       </section>
@@ -77,7 +78,7 @@ export default async function HomePage() {
       {/* 5 — Eat & Drink (3 columns) */}
       <section className="py-16 sm:py-24 bg-cream">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center mb-12">Eat &amp; Drink</h2>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center uppercase mb-12">Eat &amp; Drink</h2>
           <div className="grid gap-8 md:grid-cols-3">
             {EAT.map((e) => (
               <div key={e.title} className="text-center">
@@ -96,15 +97,16 @@ export default async function HomePage() {
         image="/uploads/weddings.jpg" eyebrow="Celebrate" title="Weddings"
         ctaLabel="Discover Now" ctaHref="/weddings" />
 
-      {/* 7 — At a Glance (icon row) */}
-      <section className="py-16 sm:py-24 bg-white">
+      {/* 7 — At a Glance (icon row, navy) */}
+      <section className="py-16 sm:py-24 bg-navy">
         <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center mb-14">At a Glance</h2>
+          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center uppercase mb-14">At a Glance</h2>
           <div className="grid gap-10 grid-cols-2 lg:grid-cols-4 text-center">
             {GLANCE.map((g) => (
               <div key={g.title}>
-                <Image src={g.icon} alt="" width={72} height={72} className="h-16 w-16 object-contain mx-auto mb-4" />
-                <h3 className="nav-link text-navy text-sm">{g.title}</h3>
+                <Image src={g.icon} alt="" width={72} height={72} className="h-14 w-14 object-contain mx-auto mb-4" />
+                <h3 className="nav-link text-gold text-sm mb-3">{g.title}</h3>
+                <p className="text-white/70 text-sm leading-relaxed max-w-[15rem] mx-auto">{g.text}</p>
               </div>
             ))}
           </div>
@@ -129,7 +131,7 @@ function FeatureBanner({ image, eyebrow, title, ctaLabel, ctaHref }: {
         <div className="absolute inset-0 bg-black/40" />
       </div>
       <div className="relative mx-auto max-w-4xl px-6 py-28 sm:py-36 text-center text-white [text-shadow:0_2px_10px_rgba(0,0,0,.55)]">
-        <p className="nav-link text-gold">{eyebrow}</p>
+        <p className="nav-link text-white">{eyebrow}</p>
         <h2 className="hero-title text-4xl sm:text-6xl uppercase my-4">{title}</h2>
         <Link href={ctaHref} className="inline-block mt-6 bg-tan text-navy nav-link px-10 py-4 rounded-sm hover:brightness-95">
           {ctaLabel}
