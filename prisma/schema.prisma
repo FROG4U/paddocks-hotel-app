@@ -151,6 +151,7 @@ model SeoDraft {
   keywords     String   @default("")
   bodyText     String   @default("")
   notes        String   @default("")
+  source       String   @default("free") // "free" | "ai"
   createdAt    DateTime @default(now())
 
   @@unique([targetType, targetId])

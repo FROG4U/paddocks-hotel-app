@@ -7,6 +7,7 @@ import { getSession, verifyLogin, createSession, destroySession } from "./auth";
 import { saveUploadedImage, UploadError } from "./upload";
 import { parseSections } from "./data";
 import { suggestSeo } from "./ai";
+import { suggestSeoFree } from "./seo-suggest";
 
 async function requireAuth() {
   const s = await getSession();
@@ -253,16 +254,18 @@ export async function generateSeoAction(fd: FormData) {
   await requireAuth();
   const targetType = str(fd, "targetType");
   const targetId = str(fd, "targetId");
+  const useAi = str(fd, "mode") === "ai";
   if (targetType !== "page" && targetType !== "room") redirect("/admin/seo");
 
   const s = await prisma.siteSettings.findUnique({ where: { id: 1 } });
   if (!s) redirect("/admin/seo");
 
-  let name = "", url = "", title = "", desc = "", keywords = "", body = "";
+  let name = "", url = "", title = "", desc = "", keywords = "", body = "", slug = "";
   if (targetType === "page") {
     const page = await prisma.page.findUnique({ where: { id: targetId } });
     if (!page) redirect("/admin/seo");
     name = page.title;
+    slug = page.slug;
     url = page.slug === "home" ? "/" : `/${page.slug}`;
     title = page.metaTitle; desc = page.metaDescription; keywords = page.keywords;
     body = [page.heroTitle, page.heroSubtitle,
@@ -272,31 +275,44 @@ export async function generateSeoAction(fd: FormData) {
     const room = await prisma.room.findUnique({ where: { id: targetId } });
     if (!room) redirect("/admin/seo");
     name = room.name;
+    slug = room.slug;
     url = `/rooms/${room.slug}`;
     title = room.metaTitle; desc = room.metaDescription; keywords = room.keywords;
     body = [room.shortDesc, room.description].filter(Boolean).join("\n\n");
   }
 
   try {
-    const out = await suggestSeo({
-      hotel: {
-        name: s.siteName, addressLine1: s.addressLine1, addressLine2: s.addressLine2,
-        town: s.town, postcode: s.postcode, phone: s.phone, email: s.email,
-        keywords: s.metaKeywords,
-      },
-      pageKind: targetType,
-      pageName: name,
-      url,
-      currentTitle: title,
-      currentDescription: desc,
-      currentKeywords: keywords,
-      currentBody: body,
-    });
+    const out = useAi
+      ? await suggestSeo({
+          hotel: {
+            name: s.siteName, addressLine1: s.addressLine1, addressLine2: s.addressLine2,
+            town: s.town, postcode: s.postcode, phone: s.phone, email: s.email,
+            keywords: s.metaKeywords,
+          },
+          pageKind: targetType,
+          pageName: name,
+          url,
+          currentTitle: title,
+          currentDescription: desc,
+          currentKeywords: keywords,
+          currentBody: body,
+        })
+      : { ...suggestSeoFree({
+          hotel: {
+            siteName: s.siteName, town: s.town, locality: s.addressLine2,
+            county: "Herefordshire", phone: s.phone,
+          },
+          kind: targetType,
+          slug,
+          name,
+          body,
+        }), bodyText: "" };
+    const source = useAi ? "ai" : "free";
 
     await prisma.seoDraft.upsert({
       where: { targetType_targetId: { targetType, targetId } },
-      update: { ...out, targetName: name },
-      create: { targetType, targetId, targetName: name, ...out },
+      update: { ...out, targetName: name, source },
+      create: { targetType, targetId, targetName: name, source, ...out },
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Unknown error";

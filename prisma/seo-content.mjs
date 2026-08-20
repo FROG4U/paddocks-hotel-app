@@ -116,15 +116,15 @@ export const PAGES = {
 
 export const ROOMS = {
   "king-room": {
-    metaTitle: "King Room, Ross-on-Wye | The Paddocks Hotel",
-    metaDescription: "Spacious en-suite king room at The Paddocks Hotel in Symonds Yat West, near Ross-on-Wye. Ideal for couples exploring the Wye Valley.",
+    metaTitle: "King Room in Symonds Yat West | The Paddocks Hotel",
+    metaDescription: "Our most spacious room, with a king-size bed, en-suite bathroom and free parking outside. A short walk from the River Wye, near Ross-on-Wye.",
     keywords: "king room Ross-on-Wye, double room Symonds Yat, hotel room Wye Valley, en-suite room Herefordshire",
     shortDesc: "Our most spacious room, with a king-size bed and en-suite bathroom.",
     description: "Our king room is the most spacious bedroom at The Paddocks Hotel, with a king-size bed, an en-suite bathroom and plenty of room to spread out.\nIt is the natural choice for couples spending a few days in the Wye Valley, and it is a short walk from the River Wye with the Forest of Dean just across the water. Free parking is right outside, and breakfast is served downstairs.",
   },
   "double-room": {
     metaTitle: "Double Room, Symonds Yat West | The Paddocks Hotel",
-    metaDescription: "Comfortable en-suite double room near Ross-on-Wye, with free parking and the River Wye and Forest of Dean on the doorstep.",
+    metaDescription: "A comfortable en-suite double room minutes from Symonds Yat Rock and the River Wye, with free parking and an easy run into Ross-on-Wye.",
     keywords: "double room Ross-on-Wye, hotel double room Symonds Yat, bed and breakfast Wye Valley, en-suite double Herefordshire",
     shortDesc: "A warm and welcoming double room with everything you need for a restful stay.",
     description: "A warm, comfortable double room with a proper double bed, an en-suite bathroom and all the everyday things you need for a restful night.\nIt suits couples and solo travellers alike, and sits just minutes from Symonds Yat Rock and the walking trails along the River Wye. Free parking on site and an easy run into Ross-on-Wye or Monmouth.",
@@ -137,15 +137,15 @@ export const ROOMS = {
     description: "Our family room gives you generous space and flexible bedding so parents and children can all stay together, with an en-suite bathroom of your own.\nIt is a good base for a family holiday in the Wye Valley: canoe hire, the Butterfly Zoo and Symonds Yat Rock are all minutes away, with Puzzlewood, Clearwell Caves and Goodrich Castle a short drive into the Forest of Dean.",
   },
   "twin-room": {
-    metaTitle: "Twin Room, Ross-on-Wye | The Paddocks Hotel",
-    metaDescription: "Twin room with two single beds at The Paddocks Hotel, Symonds Yat West near Ross-on-Wye. Ideal for friends or colleagues travelling together.",
+    metaTitle: "Twin Room in Symonds Yat West | The Paddocks Hotel",
+    metaDescription: "Two single beds and an en-suite bathroom, popular with friends walking the Wye Valley and colleagues down on business near Ross-on-Wye.",
     keywords: "twin room Ross-on-Wye, twin beds hotel Symonds Yat, business accommodation Ross-on-Wye, hotel twin room Wye Valley",
     shortDesc: "Two comfortable single beds, ideal for friends or colleagues.",
     description: "Two comfortable single beds in a bright, airy room with its own en-suite bathroom.\nIt is the room friends walking the Wye Valley ask for, and it works just as well for colleagues down on business, with free parking outside and M50 Junction 4 about fifteen minutes away.",
   },
   "single-room": {
     metaTitle: "Single Room, Symonds Yat West | The Paddocks Hotel",
-    metaDescription: "Comfortable en-suite single room near Ross-on-Wye, with free parking, WiFi and dinner in our restaurant downstairs.",
+    metaDescription: "A snug en-suite single room near Ross-on-Wye with free parking and WiFi, and dinner in our Indian restaurant downstairs. Walkers welcome.",
     keywords: "single room Ross-on-Wye, single occupancy hotel Symonds Yat, business hotel Wye Valley, solo traveller accommodation Herefordshire",
     shortDesc: "A snug, well-appointed single room for the solo traveller.",
     description: "A snug, well-appointed single room with an en-suite bathroom and everything the solo traveller needs.\nIt is popular with walkers on the Wye Valley Walk and with people down for work, with free parking outside, WiFi throughout and dinner in our restaurant downstairs.",

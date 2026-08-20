@@ -76,11 +76,11 @@ export default async function SeoPage({ searchParams }:
     <div>
       <h1 className="font-display text-3xl text-navy mb-1">SEO</h1>
       <p className="text-ink/60 mb-6">
-        How each page looks to Google, and an AI assistant that rewrites the bits that need work.
+        How each page looks to Google, and a free writer that fixes the bits that need work.
       </p>
 
       <SavedBanner show={applied === "1"} text="Applied - the page is live with the new wording." />
-      <SavedBanner show={!!generated} text={`Suggestion ready for ${generated}. Review it below.`} />
+      <SavedBanner show={!!generated} text={`Suggestion ready for ${generated}. Check it over, edit anything you like, then apply.`} />
       {error && (
         <div className="mb-5 rounded-md bg-red-600 text-white text-sm px-4 py-2.5">{error}</div>
       )}
@@ -101,37 +101,37 @@ export default async function SeoPage({ searchParams }:
           <p className="text-xs text-ink/50 mt-2">Both generated automatically.</p>
         </div>
         <div className="bg-white rounded-xl border border-black/10 p-5">
-          <p className="text-sm font-medium text-navy mb-2">AI assistant</p>
-          {ai
-            ? <Pill text="Ready" tone="good" />
-            : <Pill text="Not set up" tone="warn" />}
+          <p className="text-sm font-medium text-navy mb-2">Writer</p>
+          <Pill text="Free, built in" tone="good" />
+          <p className="text-xs text-ink/50 mt-2">
+            {ai ? "Optional AI writer also connected." : "No subscription needed."}
+          </p>
         </div>
       </div>
 
-      {!ai && (
-        <Card title="Turn on the AI assistant">
-          <p className="text-sm text-ink/70">
-            The assistant needs an Anthropic API key. It is read from an environment variable, never
-            stored in the website database.
-          </p>
-          <ol className="text-sm text-ink/70 list-decimal pl-5 space-y-1">
-            <li>Get a key from console.anthropic.com (Settings, then API keys).</li>
-            <li>In Plesk open the domain, then Node.js, then Custom environment variables.</li>
-            <li>
-              Add <code className="bg-cream px-1 rounded">ANTHROPIC_API_KEY</code> with the key as its value.
-            </li>
-            <li>Restart the app. This page will then show &ldquo;Ready&rdquo;.</li>
-          </ol>
-        </Card>
-      )}
+      <Card title="How the writer works">
+        <p className="text-sm text-ink/70">
+          <strong>Write for me</strong> is built into the site and costs nothing, however many times
+          you use it. It takes the page&rsquo;s own wording and combines it with the search terms
+          that matter for a hotel in this area, keeping the title and description to the lengths
+          Google shows in full. You can edit anything it suggests before applying it.
+        </p>
+        <p className="text-sm text-ink/70">
+          {ai
+            ? "The ✨ AI button is the optional extra: it can rewrite the page text as well, but each click uses your Anthropic key and costs a small amount."
+            : "There is also an optional AI writer that can rewrite the page text too. It needs an Anthropic API key and charges per use, so it is off unless you add one. You do not need it."}
+        </p>
+      </Card>
 
       {/* Pending AI suggestions */}
       {drafts.map((d) => (
         <section key={d.id} id={`draft-${d.targetId}`}
           className="bg-white rounded-xl border-2 border-gold p-5 sm:p-6 mb-6">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">✨</span>
-            <h2 className="font-display text-lg text-navy">AI suggestion for {d.targetName}</h2>
+            <span className="text-lg">{d.source === "ai" ? "✨" : "📝"}</span>
+            <h2 className="font-display text-lg text-navy">
+              {d.source === "ai" ? "AI suggestion" : "Suggestion"} for {d.targetName}
+            </h2>
           </div>
           {d.notes && <p className="text-sm text-ink/60 mb-4">{d.notes}</p>}
 
@@ -193,12 +193,24 @@ export default async function SeoPage({ searchParams }:
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2 justify-end">
                       <Link href={r.editHref} className="text-xs text-ink/50 hover:text-navy underline">Edit</Link>
+                      {!hasDraft && (
+                        <form action={generateSeoAction}>
+                          <input type="hidden" name="targetType" value={r.kind} />
+                          <input type="hidden" name="targetId" value={r.id} />
+                          <input type="hidden" name="mode" value="free" />
+                          <button className="bg-gold text-navy text-xs font-semibold rounded px-3 py-1.5 hover:brightness-95">
+                            Write for me
+                          </button>
+                        </form>
+                      )}
                       {ai && !hasDraft && (
                         <form action={generateSeoAction}>
                           <input type="hidden" name="targetType" value={r.kind} />
                           <input type="hidden" name="targetId" value={r.id} />
-                          <button className="bg-gold text-navy text-xs font-semibold rounded px-3 py-1.5 hover:brightness-95">
-                            ✨ Write with AI
+                          <input type="hidden" name="mode" value="ai" />
+                          <button title="Uses your Anthropic API key, which costs a small amount per click"
+                            className="border border-gold text-navy text-xs font-semibold rounded px-3 py-1.5 hover:bg-gold/10">
+                            ✨ AI
                           </button>
                         </form>
                       )}
