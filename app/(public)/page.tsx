@@ -26,12 +26,27 @@ const EAT = [
   { title: "Afternoon Tea", img: "/uploads/afternoon-tea.jpg" },
 ];
 
-const GLANCE_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.";
 const GLANCE = [
-  { icon: "/icons/gold-bedroom.png", title: "Bed Rooms", text: GLANCE_TEXT },
-  { icon: "/icons/gold-tree.png", title: "Garden Space", text: GLANCE_TEXT },
-  { icon: "/icons/gold-location.png", title: "Location", text: GLANCE_TEXT },
-  { icon: "/icons/gold-parking.png", title: "Parking", text: GLANCE_TEXT },
+  {
+    icon: "/icons/gold-bedroom.png",
+    title: "Bed Rooms",
+    text: "Comfortable, quiet en-suite rooms with everything you need to unwind — sink into a proper bed after a day out in the Wye Valley.",
+  },
+  {
+    icon: "/icons/gold-tree.png",
+    title: "Garden Space",
+    text: "Lawns, a gazebo and a pretty terrace — a lovely outdoor setting for wedding ceremonies, drinks receptions, parties and summer events.",
+  },
+  {
+    icon: "/icons/gold-location.png",
+    title: "Location",
+    text: "In Symonds Yat West, midway between Ross-on-Wye and Monmouth, with the River Wye, Symonds Yat Rock and the Forest of Dean on the doorstep.",
+  },
+  {
+    icon: "/icons/gold-parking.png",
+    title: "Parking",
+    text: "Plenty of free parking right outside for guests and events — arrive, park up and leave the car where it is until you head home again.",
+  },
 ];
 
 const WELCOME_TEXT =
