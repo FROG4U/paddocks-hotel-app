@@ -1,9 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import Hero from "@/components/Hero";
 import { getPage, getSettings, parseSections } from "@/lib/data";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [page, s] = await Promise.all([getPage("home"), getSettings()]);
+  return pageMetadata({
+    settings: s,
+    title: page?.metaTitle || s.metaTitle,
+    description: page?.metaDescription || s.metaDescription,
+    keywords: page?.keywords,
+    path: "/",
+    image: page?.heroImage,
+  });
+}
 
 /**
  * Home page - a section-for-section copy of the original design at

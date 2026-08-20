@@ -37,7 +37,10 @@ export default async function EditRoom({ params }: { params: Promise<{ id: strin
 
         <Card title="SEO">
           <Text label="Browser tab title" name="metaTitle" defaultValue={room?.metaTitle} />
-          <TextArea label="Search description" name="metaDescription" defaultValue={room?.metaDescription} rows={2} />
+          <TextArea label="Search description" name="metaDescription" defaultValue={room?.metaDescription} rows={2}
+            hint="The grey text under your link in Google. Aim for 140-160 characters." />
+          <TextArea label="Keywords for this room" name="keywords" defaultValue={room?.keywords} rows={2}
+            hint="Comma separated. Added to the site-wide keywords." />
         </Card>
 
         <SaveBar label={isNew ? "Create room" : "Save room"} />

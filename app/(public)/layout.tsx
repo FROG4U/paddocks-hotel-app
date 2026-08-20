@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { getNav, getSettings } from "@/lib/data";
+import { hotelJsonLd, JsonLd, keywordList, siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -10,9 +11,14 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return {
-    title: s.metaTitle,
+    metadataBase: new URL(siteUrl(s)),
+    title: { default: s.metaTitle, template: `%s | ${s.siteName}` },
     description: s.metaDescription,
+    keywords: keywordList(s.metaKeywords),
     icons: { icon: s.logoUrl },
+    applicationName: s.siteName,
+    formatDetection: { telephone: true, address: true, email: true },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
   };
 }
 
@@ -22,6 +28,8 @@ export default async function PublicLayout({ children }: { children: React.React
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: brandVars }} />
+      {/* Hotel details for Google: address, phone, hours, social links */}
+      <JsonLd data={hotelJsonLd(s)} />
       <SiteHeader
         nav={nav}
         logoUrl={s.logoUrl}

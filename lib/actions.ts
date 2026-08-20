@@ -44,6 +44,7 @@ export async function saveSettingsAction(fd: FormData) {
   await requireAuth();
 
   const logo = await saveUploadedImage(file(fd, "logoFile"), "logo");
+  const ogImage = await saveUploadedImage(file(fd, "ogImageFile"), "share-image");
 
   // Opening hours: rows hours_label_i / hours_value_i
   const hours: { label: string; value: string }[] = [];
@@ -77,8 +78,13 @@ export async function saveSettingsAction(fd: FormData) {
       tiktokUrl: str(fd, "tiktokUrl"),
       bookCtaLabel: str(fd, "bookCtaLabel"),
       bookCtaHref: str(fd, "bookCtaHref"),
+      siteUrl: str(fd, "siteUrl").trim().replace(/\/$/, ""),
       metaTitle: str(fd, "metaTitle"),
       metaDescription: str(fd, "metaDescription"),
+      metaKeywords: str(fd, "metaKeywords"),
+      ...(ogImage ? { ogImage } : {}),
+      geoLat: str(fd, "geoLat"),
+      geoLng: str(fd, "geoLng"),
       footerNote: str(fd, "footerNote"),
     },
   });
@@ -124,6 +130,7 @@ export async function savePageAction(fd: FormData) {
       showInNav: bool(fd, "showInNav"),
       metaTitle: str(fd, "metaTitle"),
       metaDescription: str(fd, "metaDescription"),
+      keywords: str(fd, "keywords"),
     },
   });
   revalidatePath("/", "layout");
@@ -151,6 +158,7 @@ export async function saveRoomAction(fd: FormData) {
     showPrice: bool(fd, "showPrice"),
     metaTitle: str(fd, "metaTitle"),
     metaDescription: str(fd, "metaDescription"),
+    keywords: str(fd, "keywords"),
   };
 
   if (id && id !== "new") {

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { PAGES as SEO_PAGES, ROOMS as SEO_ROOMS } from "./seo-content.mjs";
 
 const prisma = new PrismaClient();
 
@@ -43,10 +44,12 @@ async function main() {
       update: {},
       create: {
         name: r.name, slug: r.slug, order: i, heroEyebrow: "Book Our",
-        heroImage: r.image, description: r.desc, shortDesc: r.desc,
-        price: "", showPrice: false,
-        metaTitle: `${r.name} - The Paddocks Hotel`,
-        metaDescription: r.desc,
+        heroImage: r.image, price: "", showPrice: false,
+        description: SEO_ROOMS[r.slug]?.description ?? r.desc,
+        shortDesc: SEO_ROOMS[r.slug]?.shortDesc ?? r.desc,
+        metaTitle: SEO_ROOMS[r.slug]?.metaTitle ?? `${r.name} - The Paddocks Hotel`,
+        metaDescription: SEO_ROOMS[r.slug]?.metaDescription ?? r.desc,
+        keywords: SEO_ROOMS[r.slug]?.keywords ?? "",
       },
     });
   }
@@ -95,11 +98,14 @@ async function main() {
       create: {
         slug: p.slug, title: p.title, navLabel: p.navLabel, navGroup: p.navGroup,
         order: p.order, showInNav: p.slug !== "explore",
-        heroEyebrow: p.heroEyebrow, heroTitle: p.heroTitle,
-        heroSubtitle: p.heroSubtitle, heroImage: p.heroImage,
-        sectionsJson: JSON.stringify(p.sections),
-        metaTitle: `${p.title} - The Paddocks Hotel`,
-        metaDescription: p.heroSubtitle,
+        heroImage: p.heroImage,
+        heroEyebrow: SEO_PAGES[p.slug]?.heroEyebrow ?? p.heroEyebrow,
+        heroTitle: SEO_PAGES[p.slug]?.heroTitle ?? p.heroTitle,
+        heroSubtitle: SEO_PAGES[p.slug]?.heroSubtitle ?? p.heroSubtitle,
+        sectionsJson: JSON.stringify(SEO_PAGES[p.slug]?.sections ?? p.sections),
+        metaTitle: SEO_PAGES[p.slug]?.metaTitle ?? `${p.title} - The Paddocks Hotel`,
+        metaDescription: SEO_PAGES[p.slug]?.metaDescription ?? p.heroSubtitle,
+        keywords: SEO_PAGES[p.slug]?.keywords ?? "",
       },
     });
   }

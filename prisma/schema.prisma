@@ -58,8 +58,13 @@ model SiteSettings {
   bookCtaHref  String @default("/contact")
 
   // SEO defaults + footer
-  metaTitle       String @default("The Paddocks Hotel - Ross-on-Wye")
-  metaDescription String @default("The Paddocks Hotel & Indian Restaurant in the heart of Ross-on-Wye. Rooms, weddings, celebrations, dining and more.")
+  siteUrl         String @default("https://paddockshotel.com")
+  metaTitle       String @default("The Paddocks Hotel | Hotel & Restaurant, Symonds Yat West, Ross-on-Wye")
+  metaDescription String @default("Family-run hotel and Indian restaurant in Symonds Yat West, Ross-on-Wye. En-suite rooms, wedding and party venue, and a bar in the heart of the Wye Valley.")
+  metaKeywords    String @default("hotel Ross-on-Wye, Symonds Yat hotel, Wye Valley hotel, wedding venue Ross-on-Wye, Indian restaurant Ross-on-Wye, bed and breakfast Symonds Yat, Forest of Dean hotel")
+  ogImage         String @default("/uploads/home.jpg")
+  geoLat          String @default("51.8408")
+  geoLng          String @default("-2.6478")
   footerNote      String @default("© The Paddocks Hotel. All rights reserved.")
 
   updatedAt DateTime @updatedAt
@@ -86,6 +91,7 @@ model Page {
 
   metaTitle       String @default("")
   metaDescription String @default("")
+  keywords        String @default("")
 
   updatedAt DateTime @updatedAt
 }
@@ -105,6 +111,7 @@ model Room {
 
   metaTitle       String @default("")
   metaDescription String @default("")
+  keywords        String @default("")
 
   updatedAt DateTime @updatedAt
 }

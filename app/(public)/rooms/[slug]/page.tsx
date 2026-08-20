@@ -2,17 +2,22 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Hero from "@/components/Hero";
 import { getRoom, getSettings } from "@/lib/data";
+import { breadcrumbJsonLd, JsonLd, pageMetadata, roomJsonLd } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const room = await getRoom(slug);
+  const [room, s] = await Promise.all([getRoom(slug), getSettings()]);
   if (!room) return {};
-  return {
-    title: room.metaTitle || `${room.name} - The Paddocks Hotel`,
-    description: room.metaDescription || room.shortDesc,
-  };
+  return pageMetadata({
+    settings: s,
+    title: room.metaTitle || `${room.name} - ${s.siteName}`,
+    description: room.metaDescription || room.shortDesc || s.metaDescription,
+    keywords: room.keywords,
+    path: `/rooms/${slug}`,
+    image: room.heroImage,
+  });
 }
 
 export default async function RoomPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -22,6 +27,8 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
+      <JsonLd data={roomJsonLd(s, room)} />
+      <JsonLd data={breadcrumbJsonLd(s, [{ name: "Our Rooms", path: `/rooms/${room.slug}` }, { name: room.name, path: `/rooms/${room.slug}` }])} />
       <Hero
         eyebrow={room.heroEyebrow}
         title={room.name}

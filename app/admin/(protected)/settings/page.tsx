@@ -68,9 +68,23 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </div>
         </Card>
 
-        <Card title="SEO & footer">
-          <Text label="Default browser tab title" name="metaTitle" defaultValue={s.metaTitle} />
-          <TextArea label="Default search description" name="metaDescription" defaultValue={s.metaDescription} rows={2} />
+        <Card title="Google & SEO">
+          <Text label="Website address" name="siteUrl" defaultValue={s.siteUrl}
+            hint="Used for the sitemap, canonical links and social previews. e.g. https://paddockshotel.com" />
+          <Text label="Default browser tab title" name="metaTitle" defaultValue={s.metaTitle}
+            hint="Aim for 50-60 characters and include the town." />
+          <TextArea label="Default search description" name="metaDescription" defaultValue={s.metaDescription} rows={3}
+            hint="The grey text under your link in Google. Aim for 140-160 characters." />
+          <TextArea label="Keywords" name="metaKeywords" defaultValue={s.metaKeywords} rows={3}
+            hint="Comma separated, e.g. hotel Ross-on-Wye, wedding venue Wye Valley. Google ignores this tag, so the words also need to appear in your page text." />
+          <ImageField label="Sharing image (Facebook / WhatsApp preview)" name="ogImageFile" current={s.ogImage} />
+          <div className="grid grid-cols-2 gap-4">
+            <Text label="Map latitude" name="geoLat" defaultValue={s.geoLat} />
+            <Text label="Map longitude" name="geoLng" defaultValue={s.geoLng} />
+          </div>
+        </Card>
+
+        <Card title="Footer">
           <Text label="Footer copyright line" name="footerNote" defaultValue={s.footerNote} />
         </Card>
 

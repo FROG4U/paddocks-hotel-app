@@ -53,7 +53,10 @@ export default async function EditPage({
           <Text label="Menu label" name="navLabel" defaultValue={page.navLabel} hint="How this page appears in the top menu." />
           <Toggle label="Show in the menu" name="showInNav" defaultChecked={page.showInNav} />
           <Text label="Browser tab title (SEO)" name="metaTitle" defaultValue={page.metaTitle} />
-          <TextArea label="Search description (SEO)" name="metaDescription" defaultValue={page.metaDescription} rows={2} />
+          <TextArea label="Search description (SEO)" name="metaDescription" defaultValue={page.metaDescription} rows={2}
+            hint="The grey text under your link in Google. Aim for 140-160 characters." />
+          <TextArea label="Keywords for this page" name="keywords" defaultValue={page.keywords} rows={2}
+            hint="Comma separated. Added to the site-wide keywords." />
         </Card>
 
         <SaveBar />

@@ -4,17 +4,22 @@ import Image from "next/image";
 import Hero from "@/components/Hero";
 import WeddingPackages from "@/components/WeddingPackages";
 import { getPage, getSettings, parseSections } from "@/lib/data";
+import { breadcrumbJsonLd, JsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const page = await getPage(slug);
+  const [page, s] = await Promise.all([getPage(slug), getSettings()]);
   if (!page || slug === "home") return {};
-  return {
-    title: page.metaTitle || `${page.title} - The Paddocks Hotel`,
-    description: page.metaDescription || page.heroSubtitle,
-  };
+  return pageMetadata({
+    settings: s,
+    title: page.metaTitle || `${page.title} - ${s.siteName}`,
+    description: page.metaDescription || page.heroSubtitle || s.metaDescription,
+    keywords: page.keywords,
+    path: `/${slug}`,
+    image: page.heroImage,
+  });
 }
 
 export default async function ContentPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -30,6 +35,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd(s, [{ name: page.title, path: `/${slug}` }])} />
       <Hero
         eyebrow={page.heroEyebrow}
         title={page.heroTitle || page.title}

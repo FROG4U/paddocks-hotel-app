@@ -1,30 +1,36 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Hero from "@/components/Hero";
-import { getExploreItems, getPage, parseSections } from "@/lib/data";
+import { getExploreItems, getPage, getSettings, parseSections } from "@/lib/data";
+import { breadcrumbJsonLd, JsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await getPage("explore");
-  return {
-    title: page?.metaTitle || "Explore the Area - The Paddocks Hotel",
+  const [page, s] = await Promise.all([getPage("explore"), getSettings()]);
+  return pageMetadata({
+    settings: s,
+    title: page?.metaTitle || `Explore the Area - ${s.siteName}`,
     description:
       page?.metaDescription ||
-      "Things to see and do around The Paddocks Hotel: Symonds Yat Rock, the River Wye, the Forest of Dean, castles, caves and more.",
-  };
+      "Things to see and do around Symonds Yat West and Ross-on-Wye: Symonds Yat Rock, canoeing on the River Wye, the Forest of Dean, castles and caves.",
+    keywords: page?.keywords,
+    path: "/explore",
+    image: page?.heroImage,
+  });
 }
 
 // Every card uses the same navy band with a gold button.
 const BAND = { bg: "bg-navy", text: "text-white", sub: "text-white/75", btn: "bg-gold text-navy" };
 
 export default async function ExplorePage() {
-  const [items, page] = await Promise.all([getExploreItems(), getPage("explore")]);
+  const [items, page, s] = await Promise.all([getExploreItems(), getPage("explore"), getSettings()]);
   const sections = parseSections(page?.sectionsJson ?? "[]");
   const intro = sections[0]?.body;
 
   return (
     <>
+      <JsonLd data={breadcrumbJsonLd(s, [{ name: "Explore", path: "/explore" }])} />
       <Hero
         eyebrow={page?.heroEyebrow || "Discover"}
         title={page?.heroTitle || "Explore"}
