@@ -100,7 +100,7 @@ Write improved SEO fields for this page. Keep any real facts from the current te
   if (!parsed) throw new Error("The AI did not return a usable suggestion. Please try again.");
 
   // Belt and braces: strip any long dashes that slipped through.
-  const clean = (v: string) => v.replace(/[—–]/g, "-").trim();
+  const clean = (v: string) => v.replace(/[\u2014\u2013]/g, "-").trim();
   return {
     metaTitle: clean(parsed.metaTitle),
     metaDescription: clean(parsed.metaDescription),

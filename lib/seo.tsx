@@ -88,7 +88,7 @@ function openingHours(s: Settings) {
   const out: string[] = [];
   for (const row of parseHours(s.hoursJson)) {
     const days = row.label
-      .split(/[-–]/)
+      .split(/[-\u2013]/)
       .map((d) => DAYS[d.trim().slice(0, 3).toLowerCase()])
       .filter(Boolean);
     const times = row.value.split("-").map((t) => to24(t));
