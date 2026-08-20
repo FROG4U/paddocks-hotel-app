@@ -107,9 +107,7 @@ export default function WeddingPackages({ ctaHref = "/contact" }: { ctaHref?: st
       <div className="mx-auto max-w-6xl px-6">
         <header className="text-center max-w-2xl mx-auto mb-14">
           <p className="nav-link text-navy mb-2">Your perfect wedding venue</p>
-          <h2 className="font-display text-3xl sm:text-5xl text-gold uppercase mb-6">
-            Wedding Packages
-          </h2>
+          <h2 className="section-title mb-6">Wedding Packages</h2>
           <p className="text-lg leading-relaxed text-ink/80">
             Here at The Paddocks we tailor our wedding packages to fit each couple. We can offer
             packages at all price points and work closely with our couples to ensure the best price
@@ -156,7 +154,7 @@ export default function WeddingPackages({ ctaHref = "/contact" }: { ctaHref?: st
 
                 <div className="mt-auto pt-8">
                   <Link href={ctaHref}
-                    className="block text-center bg-tan text-navy nav-link px-6 py-3.5 rounded-sm hover:brightness-95 transition">
+                    className="btn-brand block text-center w-full !px-6 !py-4">
                     Enquire Now
                   </Link>
                 </div>

@@ -32,8 +32,8 @@ model SiteSettings {
   // Brand colours
   navyColor   String @default("#0a416c")
   accentColor String @default("#e23125")
-  goldColor   String @default("#c9a24b")
-  buttonColor String @default("#c9a97c")
+  goldColor   String @default("#ba9667")
+  buttonColor String @default("#ba9667")
 
   // Contact
   addressLine1 String @default("The Paddocks Hotel, Wye View Lane")

@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
+/* Brand values taken from the original design at paddock.frog4u.com */
 :root {
   --navy: #0a416c;
-  --gold: #c9a24b;
-  --tan: #c9a97c;
+  --gold: #ba9667;
+  --tan: #ba9667;
   --accent: #e23125;
   --cream: #f6ede3;
   --ink: #1b252f;
@@ -17,32 +18,96 @@
   --color-cream: var(--cream);
   --color-ink: var(--ink);
   --font-display: var(--font-slab);
-  --font-sans: var(--font-poppins);
+  --font-sans: var(--font-montserrat);
+  --font-button: var(--font-archivo);
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-family: var(--font-montserrat), system-ui, sans-serif;
   color: var(--ink);
   background: #fff;
 }
 
 .font-display { font-family: var(--font-slab), Georgia, serif; }
 
+/* ── Type styles copied from the original site ────────────────────────── */
+
+/* Nav / small Copperplate caps — 16px uppercase on the original header */
 .nav-link {
-  font-family: var(--font-slab), Georgia, serif; /* Copperplate brand font */
-  letter-spacing: 0.03em;
+  font-family: var(--font-slab), Georgia, serif;
   text-transform: uppercase;
-  font-weight: 400;
-  font-size: 0.85rem;
+  font-weight: 600;
+  font-size: 1rem;              /* 16px */
 }
 
+/* Big banner + hero headline: Copperplate 105px / 75px, uppercase */
 .hero-title {
   font-family: var(--font-slab), Georgia, serif;
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: 0.01em;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 55px;              /* mobile */
+  line-height: 44px;
+  color: #fbfbfb;
 }
+@media (min-width: 1025px) {
+  .hero-title { font-size: 105px; line-height: 75px; }
+}
+
+/* Section headline: Copperplate 58px / 45px, uppercase, gold */
+.section-title {
+  font-family: var(--font-slab), Georgia, serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 45px;              /* mobile */
+  line-height: 45px;
+}
+@media (min-width: 1025px) {
+  .section-title { font-size: 58px; }
+}
+
+/* Small Copperplate caption used for quick-links, at-a-glance and
+   the Eat & Drink captions: 22px / 33px (28px for captions) */
+.caption-title {
+  font-family: var(--font-slab), Georgia, serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 22px;
+  line-height: 33px;
+}
+.caption-title-lg { font-size: 22px; line-height: 33px; }
+@media (min-width: 1025px) {
+  .caption-title-lg { font-size: 28px; line-height: 45px; }
+}
+
+/* Eyebrow above the big headlines: Montserrat 22px / 26px semibold,
+   sentence case (NOT uppercase) */
+.eyebrow {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;              /* mobile */
+  line-height: 26px;
+}
+@media (min-width: 1025px) {
+  .eyebrow { font-size: 22px; }
+}
+
+/* Buttons: Archivo 18px / 800, uppercase, gold on navy text, square */
+.btn-brand {
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 18px;
+  text-transform: uppercase;
+  background: var(--gold);
+  color: var(--navy);
+  padding: 20px 55px;
+  border-radius: 0;
+  display: inline-block;
+}
+.btn-brand:hover { filter: brightness(0.95); }
 
 .prose-body p { margin-bottom: 1rem; line-height: 1.7; }

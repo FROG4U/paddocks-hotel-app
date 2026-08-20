@@ -5,6 +5,12 @@ import { getPage, getSettings, parseSections } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Home page — a section-for-section copy of the original design at
+ * paddock.frog4u.com: type sizes, capitalisation, colours, image crops and
+ * section heights all match the original.
+ */
+
 const QUICK = [
   { icon: "/icons/gold-bed.png", label: "Stay", href: "/rooms/king-room" },
   { icon: "/icons/gold-dine.png", label: "Dine", href: "/bar" },
@@ -13,9 +19,10 @@ const QUICK = [
   { icon: "/icons/gold-marry.png", label: "Marry", href: "/weddings" },
 ];
 
+// The original uses these three photos, in this order.
 const EAT = [
-  { title: "Restaurant", img: "/uploads/restaurant.jpg" },
-  { title: "Bar & Lounge", img: "/uploads/bar.jpg" },
+  { title: "Restaurant", img: "/uploads/takeaway.png" },
+  { title: "Bar & Lounge", img: "/uploads/reservation.png" },
   { title: "Afternoon Tea", img: "/uploads/afternoon-tea.jpg" },
 ];
 
@@ -37,7 +44,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1 — Hero */}
+      {/* 1 — Hero (full viewport height) */}
       <Hero
         eyebrow={page?.heroEyebrow}
         title={page?.heroTitle || s.siteName}
@@ -48,95 +55,78 @@ export default async function HomePage() {
         size="full"
       />
 
-      {/* 2 — Quick links strip */}
-      <section className="bg-navy">
-        <div className="mx-auto max-w-5xl px-6 grid grid-cols-5">
+      {/* 2 — Quick links strip (navy, 147px tall on desktop) */}
+      <section className="bg-navy px-[10px]">
+        <div className="mx-auto max-w-[756px] flex flex-wrap justify-center gap-y-5 gap-x-[5px] pt-5 pb-[18px]">
           {QUICK.map((q) => (
             <Link key={q.label} href={q.href}
-              className="flex flex-col items-center gap-3 py-8 hover:bg-white/5 transition">
-              <Image src={q.icon} alt="" width={52} height={52} className="h-12 w-12 object-contain" />
-              <span className="nav-link text-gold text-xs sm:text-sm">{q.label}</span>
+              className="flex flex-col items-center w-1/3 sm:w-auto sm:flex-1 px-1 hover:opacity-80 transition">
+              <Image src={q.icon} alt="" width={202} height={202}
+                className="h-[101px] w-[101px] lg:h-[76px] lg:w-[76px] object-contain" />
+              <span className="caption-title">{q.label}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* 3 — Welcome (plain centred text) */}
-      <section className="py-20 sm:py-28 bg-white">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <p className="text-navy font-semibold text-lg sm:text-xl mb-3">Welcome to</p>
-          <h2 className="font-display text-3xl sm:text-5xl text-gold uppercase mb-8">The Paddocks Hotel</h2>
-          <p className="text-lg leading-relaxed text-ink/80">{welcomeText}</p>
+      {/* 3 — Welcome */}
+      <section className="bg-white">
+        <div className="mx-auto max-w-[1140px] px-6 pt-[70px] pb-[80px] lg:pt-[102px] lg:pb-[117px] text-center flex flex-col gap-5">
+          <p className="eyebrow text-navy">Welcome to</p>
+          {/* The original breaks this headline over two lines */}
+          <h2 className="section-title">The Paddocks<br />Hotel</h2>
+          <p className="mx-auto max-w-[958px] text-base lg:text-[18px] leading-[22px] lg:leading-[28px] text-black">
+            {welcomeText}
+          </p>
         </div>
       </section>
 
-      {/* 4 — Relax & Unwind (image banner) */}
-      <FeatureBanner
-        image="/uploads/king-room.jpg" eyebrow="Book our rooms" title="Relax & Unwind"
+      {/* 4 — Relax & Unwind */}
+      <Hero image="/uploads/king-room.jpg" eyebrow="Book our rooms" title="Relax & Unwind"
         ctaLabel="Book Now" ctaHref={s.bookCtaHref} />
 
-      {/* 5 — Eat & Drink (3 columns) */}
-      <section className="py-16 sm:py-24 bg-cream">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center uppercase mb-12">Eat &amp; Drink</h2>
-          <div className="grid gap-8 md:grid-cols-3">
+      {/* 5 — Eat & Drink (cream) */}
+      <section className="bg-cream px-6 lg:px-16">
+        <div className="mx-auto max-w-[1140px] pt-[90px] pb-[112px] text-center">
+          <h2 className="section-title">Eat &amp; Drink</h2>
+          <div className="mt-10 grid gap-5 sm:grid-cols-3">
             {EAT.map((e) => (
-              <div key={e.title} className="text-center">
-                <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-md mb-5">
-                  <Image src={e.img} alt={e.title} fill className="object-cover" sizes="(max-width:768px) 100vw, 33vw" />
+              <div key={e.title}>
+                <div className="relative w-full aspect-[340/417] overflow-hidden">
+                  <Image src={e.img} alt={e.title} fill className="object-cover" sizes="(max-width:640px) 100vw, 340px" />
                 </div>
-                <h3 className="nav-link text-gold text-base">{e.title}</h3>
+                <h3 className="caption-title caption-title-lg mt-5">{e.title}</h3>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 6 — Weddings (image banner) */}
-      <FeatureBanner
-        image="/uploads/weddings.jpg" eyebrow="Celebrate" title="Weddings"
+      {/* 6 — Weddings */}
+      <Hero image="/uploads/weddings.jpg" eyebrow="Celebrate" title="Weddings"
         ctaLabel="Discover Now" ctaHref="/weddings" />
 
-      {/* 7 — At a Glance (icon row, navy) */}
-      <section className="py-16 sm:py-24 bg-navy">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="font-display text-3xl sm:text-5xl text-gold text-center uppercase mb-14">At a Glance</h2>
-          <div className="grid gap-10 grid-cols-2 lg:grid-cols-4 text-center">
-            {GLANCE.map((g) => (
-              <div key={g.title}>
-                <Image src={g.icon} alt="" width={72} height={72} className="h-14 w-14 object-contain mx-auto mb-4" />
-                <h3 className="nav-link text-gold text-sm mb-3">{g.title}</h3>
-                <p className="text-white/70 text-sm leading-relaxed max-w-[15rem] mx-auto">{g.text}</p>
-              </div>
-            ))}
-          </div>
+      {/* 7 — At a Glance (navy) */}
+      <section className="bg-navy">
+        <div className="mx-auto max-w-[1140px] px-6 pt-[51px] text-center">
+          <h2 className="section-title">At a Glance</h2>
+        </div>
+        <div className="mx-auto max-w-[975px] px-4 sm:px-0 pb-[51px] pt-[10px]
+          flex flex-wrap justify-center gap-y-10 gap-x-[10px] text-center">
+          {GLANCE.map((g) => (
+            <div key={g.title} className="w-full sm:w-[236px] px-[10px]">
+              <Image src={g.icon} alt="" width={174} height={174}
+                className="h-[87px] w-[87px] object-contain mx-auto" />
+              <h3 className="caption-title mt-5">{g.title}</h3>
+              <p className="text-white text-base leading-[22px] mt-5">{g.text}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* 8 — Corporate & Private Events (image banner) */}
-      <FeatureBanner
-        image="/uploads/corporate.jpg" eyebrow="Celebrate" title="Corporate & Private Events"
+      {/* 8 — Corporate & Private Events */}
+      <Hero image="/uploads/corporate.jpg" eyebrow="Celebrate" title={"Corporate &\nPrivate Events"}
         ctaLabel="Discover Now" ctaHref="/meeting-room" />
     </>
-  );
-}
-
-function FeatureBanner({ image, eyebrow, title, ctaLabel, ctaHref }: {
-  image: string; eyebrow: string; title: string; ctaLabel: string; ctaHref: string;
-}) {
-  return (
-    <section className="relative">
-      <div className="absolute inset-0">
-        <Image src={image} alt={title} fill className="object-cover" sizes="100vw" />
-        <div className="absolute inset-0 bg-black/40" />
-      </div>
-      <div className="relative mx-auto max-w-4xl px-6 py-28 sm:py-36 text-center text-white [text-shadow:0_2px_10px_rgba(0,0,0,.55)]">
-        <p className="nav-link text-white">{eyebrow}</p>
-        <h2 className="hero-title text-4xl sm:text-6xl uppercase my-4">{title}</h2>
-        <Link href={ctaHref} className="inline-block mt-6 bg-tan text-navy nav-link px-10 py-4 rounded-sm hover:brightness-95">
-          {ctaLabel}
-        </Link>
-      </div>
-    </section>
   );
 }

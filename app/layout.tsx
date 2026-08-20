@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Montserrat, Archivo } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const poppins = Poppins({
+// Montserrat = body copy, Archivo = buttons — the two fonts the original
+// paddock.frog4u.com design uses alongside Copperplate for headings.
+const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
+  variable: "--font-montserrat",
+});
+
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-archivo",
 });
 
 // Copperplate — the Paddocks brand heading font (from Copperplate.ttc).
@@ -33,7 +41,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-GB" className={`${poppins.variable} ${copperplate.variable} h-full antialiased`}>
+    <html lang="en-GB" className={`${montserrat.variable} ${archivo.variable} ${copperplate.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
