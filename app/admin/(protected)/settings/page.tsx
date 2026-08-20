@@ -51,6 +51,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <Card title="Social & booking">
           <Text label="Facebook URL" name="facebookUrl" defaultValue={s.facebookUrl} />
           <Text label="Instagram URL" name="instagramUrl" defaultValue={s.instagramUrl} />
+          <Text label="Google URL" name="googleUrl" defaultValue={s.googleUrl} hint="Your Google Business / reviews link — leave blank to hide the icon" />
+          <Text label="TikTok URL" name="tiktokUrl" defaultValue={s.tiktokUrl} hint="Leave blank to hide the icon" />
           <div className="grid grid-cols-2 gap-4">
             <Text label="Booking button text" name="bookCtaLabel" defaultValue={s.bookCtaLabel} />
             <Text label="Booking button link" name="bookCtaHref" defaultValue={s.bookCtaHref} hint="e.g. /contact" />

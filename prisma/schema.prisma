@@ -50,6 +50,8 @@ model SiteSettings {
   // Social links
   facebookUrl  String @default("https://facebook.com")
   instagramUrl String @default("https://instagram.com")
+  googleUrl    String @default("")
+  tiktokUrl    String @default("")
 
   // Booking call-to-action
   bookCtaLabel String @default("Book a Room")

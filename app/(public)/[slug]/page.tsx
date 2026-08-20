@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Hero from "@/components/Hero";
+import WeddingPackages from "@/components/WeddingPackages";
 import { getPage, getSettings, parseSections } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
 
   const sections = parseSections(page.sectionsJson);
   const isContact = slug === "contact";
+  const isWeddings = slug === "weddings";
   const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(s.mapQuery)}&t=m&z=15&output=embed&iwloc=near`;
 
   return (
@@ -63,6 +65,9 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
           </section>
         );
       })}
+
+      {/* Wedding packages (from the hotel's wedding brochure) */}
+      {isWeddings && <WeddingPackages ctaHref="/contact" />}
 
       {/* Contact block: details + map */}
       {isContact && (

@@ -73,6 +73,8 @@ export async function saveSettingsAction(fd: FormData) {
       hoursJson: JSON.stringify(hours),
       facebookUrl: str(fd, "facebookUrl"),
       instagramUrl: str(fd, "instagramUrl"),
+      googleUrl: str(fd, "googleUrl"),
+      tiktokUrl: str(fd, "tiktokUrl"),
       bookCtaLabel: str(fd, "bookCtaLabel"),
       bookCtaHref: str(fd, "bookCtaHref"),
       metaTitle: str(fd, "metaTitle"),
