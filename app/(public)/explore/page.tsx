@@ -15,12 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-// Cards cycle through three band colours, like the rest of the brand.
-const BANDS = [
-  { bg: "bg-ink", text: "text-white", sub: "text-white/75", btn: "bg-gold text-navy" },
-  { bg: "bg-gold", text: "text-navy", sub: "text-navy/75", btn: "bg-navy text-white" },
-  { bg: "bg-navy", text: "text-white", sub: "text-white/75", btn: "bg-gold text-navy" },
-];
+// Every card uses the same navy band with a gold button.
+const BAND = { bg: "bg-navy", text: "text-white", sub: "text-white/75", btn: "bg-gold text-navy" };
 
 export default async function ExplorePage() {
   const [items, page] = await Promise.all([getExploreItems(), getPage("explore")]);
@@ -48,8 +44,8 @@ export default async function ExplorePage() {
 
       <section className="bg-white pb-[80px] lg:pb-[112px]">
         <div className="mx-auto max-w-[1140px] px-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, i) => {
-            const band = BANDS[i % BANDS.length];
+          {items.map((item) => {
+            const band = BAND;
             return (
               <article key={item.id} className="flex flex-col h-full overflow-hidden shadow-md">
                 <div className={`relative w-full aspect-[4/3] ${item.image ? "" : "bg-cream"}`}>
