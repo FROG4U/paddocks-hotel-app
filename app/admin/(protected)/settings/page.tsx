@@ -1,11 +1,11 @@
 import { getSettings, parseHours } from "@/lib/data";
 import { saveSettingsAction } from "@/lib/actions";
-import { Text, TextArea, ImageField, SaveBar, SavedBanner, Card } from "@/components/admin/fields";
+import { Text, TextArea, ImageField, SaveBar, SavedBanner, Card, ErrorBanner } from "@/components/admin/fields";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const { saved } = await searchParams;
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+  const { saved, error } = await searchParams;
   const s = await getSettings();
   const hours = parseHours(s.hoursJson);
   const rows = [...hours];
@@ -15,6 +15,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <div>
       <h1 className="font-display text-3xl text-navy mb-6">Contact & Settings</h1>
       <SavedBanner show={saved === "1"} />
+      <ErrorBanner message={error} />
 
       <form action={saveSettingsAction}>
         <Card title="Business">

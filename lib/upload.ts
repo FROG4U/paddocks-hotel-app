@@ -16,6 +16,11 @@ const MAX_EDGE = 1800;
 const TARGET_BYTES = 320 * 1024;
 const QUALITY_STEPS = [82, 76, 70, 62];
 
+/** Thrown when a file cannot be read as an image, so callers can show the message. */
+export class UploadError extends Error {}
+
+const FRIENDLY = "That file could not be read as an image. iPhone photos saved as HEIC are not supported - in Settings, Camera, Formats choose \"Most Compatible\", or export the photo as JPEG first. JPEG, PNG, WebP, AVIF, GIF and TIFF all work.";
+
 /**
  * Compress an uploaded image with sharp and save it under /public/uploads.
  * Images with transparency (logos, icons) are kept as WebP so they do not
@@ -29,7 +34,12 @@ export async function saveUploadedImage(file: File | null, baseName: string): Pr
   const buf = Buffer.from(await file.arrayBuffer());
   const safe = baseName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "image";
 
-  const meta = await sharp(buf).metadata();
+  let meta;
+  try {
+    meta = await sharp(buf).metadata();
+  } catch {
+    throw new UploadError(FRIENDLY);
+  }
   const hasAlpha = !!meta.hasAlpha;
 
   // .rotate() applies the EXIF orientation so phone photos are the right way up.
@@ -38,13 +48,17 @@ export async function saveUploadedImage(file: File | null, baseName: string): Pr
     .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true });
 
   let out: Buffer | null = null;
-  for (const quality of QUALITY_STEPS) {
-    out = hasAlpha
-      ? await base.clone().webp({ quality, effort: 5 }).toBuffer()
-      : await base.clone().jpeg({ quality, mozjpeg: true, progressive: true }).toBuffer();
-    if (out.length <= TARGET_BYTES) break;
+  try {
+    for (const quality of QUALITY_STEPS) {
+      out = hasAlpha
+        ? await base.clone().webp({ quality, effort: 5 }).toBuffer()
+        : await base.clone().jpeg({ quality, mozjpeg: true, progressive: true }).toBuffer();
+      if (out.length <= TARGET_BYTES) break;
+    }
+  } catch {
+    throw new UploadError(FRIENDLY);
   }
-  if (!out) return null;
+  if (!out) throw new UploadError(FRIENDLY);
 
   const ext = hasAlpha ? "webp" : "jpg";
   const filename = `${safe}-${Date.now()}.${ext}`;

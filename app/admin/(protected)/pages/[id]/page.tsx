@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { savePageAction } from "@/lib/actions";
 import { parseSections } from "@/lib/data";
-import { Text, TextArea, ImageField, Toggle, SaveBar, SavedBanner, Card } from "@/components/admin/fields";
+import { Text, TextArea, ImageField, Toggle, SaveBar, SavedBanner, Card, ErrorBanner } from "@/components/admin/fields";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +11,10 @@ export default async function EditPage({
   params, searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
   const { id } = await params;
-  const { saved } = await searchParams;
+  const { saved, error } = await searchParams;
   const page = await prisma.page.findUnique({ where: { id } });
   if (!page) notFound();
   const sections = parseSections(page.sectionsJson);
@@ -24,6 +24,7 @@ export default async function EditPage({
       <Link href="/admin/pages" className="text-sm text-ink/50 hover:text-navy">← All pages</Link>
       <h1 className="font-display text-3xl text-navy mt-2 mb-6">{page.title}</h1>
       <SavedBanner show={saved === "1"} />
+      <ErrorBanner message={error} />
 
       <form action={savePageAction}>
         <input type="hidden" name="id" value={page.id} />

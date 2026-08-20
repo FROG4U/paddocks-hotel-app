@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { getSession, verifyLogin, createSession, destroySession } from "./auth";
-import { saveUploadedImage } from "./upload";
+import { saveUploadedImage, UploadError } from "./upload";
 import { parseSections } from "./data";
 import { suggestSeo } from "./ai";
 
@@ -21,6 +21,16 @@ function str(fd: FormData, key: string, fallback = "") {
 function bool(fd: FormData, key: string) {
   return fd.get(key) === "on" || fd.get(key) === "true";
 }
+/** Run an upload, sending the user back with a readable message if it fails. */
+async function tryUpload(f: File | null, baseName: string, backTo: string) {
+  try {
+    return await saveUploadedImage(f, baseName);
+  } catch (e) {
+    const msg = e instanceof UploadError ? e.message : "That image could not be saved. Please try a different file.";
+    redirect(`${backTo}${backTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(msg)}`);
+  }
+}
+
 function file(fd: FormData, key: string): File | null {
   const v = fd.get(key);
   return v instanceof File && v.size > 0 ? v : null;
@@ -45,8 +55,8 @@ export async function logoutAction() {
 export async function saveSettingsAction(fd: FormData) {
   await requireAuth();
 
-  const logo = await saveUploadedImage(file(fd, "logoFile"), "logo");
-  const ogImage = await saveUploadedImage(file(fd, "ogImageFile"), "share-image");
+  const logo = await tryUpload(file(fd, "logoFile"), "logo", "/admin/settings");
+  const ogImage = await tryUpload(file(fd, "ogImageFile"), "share-image", "/admin/settings");
 
   // Opening hours: rows hours_label_i / hours_value_i
   const hours: { label: string; value: string }[] = [];
@@ -101,7 +111,7 @@ export async function savePageAction(fd: FormData) {
   const page = await prisma.page.findUnique({ where: { id } });
   if (!page) redirect("/admin/pages");
 
-  const heroImage = await saveUploadedImage(file(fd, "heroImageFile"), page.slug + "-hero");
+  const heroImage = await tryUpload(file(fd, "heroImageFile"), page.slug + "-hero", `/admin/pages/${id}`);
 
   const count = parseInt(str(fd, "sectionCount", "0")) || 0;
   const sections: { heading: string; body: string; image: string; imageSide: string }[] = [];
@@ -109,7 +119,7 @@ export async function savePageAction(fd: FormData) {
   for (let i = 0; i < count; i++) {
     const heading = str(fd, `section_${i}_heading`);
     const body = str(fd, `section_${i}_body`);
-    const img = await saveUploadedImage(file(fd, `section_${i}_imageFile`), `${page.slug}-section-${i}`);
+    const img = await tryUpload(file(fd, `section_${i}_imageFile`), `${page.slug}-section-${i}`, `/admin/pages/${id}`);
     const prev = existing[i] || {};
     if (heading || body || img || prev.image) {
       sections.push({
@@ -147,7 +157,7 @@ export async function saveRoomAction(fd: FormData) {
   let slug = str(fd, "slug").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   if (!slug) slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-  const heroImage = await saveUploadedImage(file(fd, "heroImageFile"), slug);
+  const heroImage = await tryUpload(file(fd, "heroImageFile"), slug, `/admin/rooms/${id || "new"}`);
 
   const data = {
     name,
@@ -197,7 +207,7 @@ export async function saveExploreAction(fd: FormData) {
   const clash = await prisma.exploreItem.findUnique({ where: { slug } });
   if (clash && clash.id !== id) slug = `${slug}-2`;
 
-  const image = await saveUploadedImage(file(fd, "imageFile"), `explore-${slug}`);
+  const image = await tryUpload(file(fd, "imageFile"), `explore-${slug}`, `/admin/explore/${id || "new"}`);
 
   let linkUrl = str(fd, "linkUrl").trim();
   // Accept "mazes.co.uk" as well as a full address.

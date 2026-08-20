@@ -2,12 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { saveRoomAction, deleteRoomAction } from "@/lib/actions";
-import { Text, TextArea, ImageField, Toggle, SaveBar, Card } from "@/components/admin/fields";
+import { Text, TextArea, ImageField, Toggle, SaveBar, Card, ErrorBanner } from "@/components/admin/fields";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditRoom({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function EditRoom({ params, searchParams }: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const [{ id }, { error }] = await Promise.all([params, searchParams]);
   const isNew = id === "new";
   const room = isNew ? null : await prisma.room.findUnique({ where: { id } });
   if (!isNew && !room) notFound();
@@ -16,6 +19,8 @@ export default async function EditRoom({ params }: { params: Promise<{ id: strin
     <div>
       <Link href="/admin/rooms" className="text-sm text-ink/50 hover:text-navy">← All rooms</Link>
       <h1 className="font-display text-3xl text-navy mt-2 mb-6">{isNew ? "Add a room" : room!.name}</h1>
+
+      <ErrorBanner message={error} />
 
       <form action={saveRoomAction}>
         <input type="hidden" name="id" value={isNew ? "new" : room!.id} />

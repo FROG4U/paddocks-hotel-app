@@ -50,9 +50,11 @@ export function ImageField({ label, name, current, hint }: {
           No image yet
         </div>
       )}
-      <input type="file" name={name} accept="image/*"
+      <input type="file" name={name} accept=".jpg,.jpeg,.png,.webp,.avif,.gif,.tif,.tiff"
         className="block text-sm file:mr-3 file:rounded file:border-0 file:bg-navy file:text-white file:px-3 file:py-1.5 file:text-sm" />
-      <span className="block text-xs text-ink/50 mt-1">{hint || "Leave empty to keep the current image. Images are compressed automatically."}</span>
+      <span className="block text-xs text-ink/50 mt-1">
+        {hint || "Leave empty to keep the current image. Photos are resized and compressed automatically. JPEG, PNG, WebP, AVIF, GIF and TIFF work; iPhone HEIC files do not."}
+      </span>
     </div>
   );
 }
@@ -60,6 +62,11 @@ export function ImageField({ label, name, current, hint }: {
 export function SavedBanner({ show, text = "Saved - changes are live." }: { show?: boolean; text?: string }) {
   if (!show) return null;
   return <div className="mb-5 rounded-md bg-green-600 text-white text-sm px-4 py-2.5">✓ {text}</div>;
+}
+
+export function ErrorBanner({ message }: { message?: string }) {
+  if (!message) return null;
+  return <div className="mb-5 rounded-md bg-red-600 text-white text-sm px-4 py-3 leading-relaxed">{message}</div>;
 }
 
 export function SaveBar({ label = "Save changes" }: { label?: string }) {
