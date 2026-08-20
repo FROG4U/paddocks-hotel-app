@@ -425,3 +425,58 @@ export async function deleteConversationAction(fd: FormData) {
   if (id) await prisma.chatConversation.delete({ where: { id } }).catch(() => {});
   redirect("/admin/chat");
 }
+
+// ── Reconnect photos whose database link was lost ──
+// Uploaded filenames start with the slug of whatever they belong to, so an
+// orphaned file can be matched back to its record.
+export async function relinkPhotosAction() {
+  await requireAuth();
+  const { uploadDirs } = await import("./storage");
+  const fs = await import("fs");
+  const path = await import("path");
+
+  // Every image on disk, newest first, from both upload folders.
+  const files: { name: string; time: number }[] = [];
+  for (const dir of uploadDirs()) {
+    try {
+      for (const name of fs.readdirSync(dir)) {
+        if (!/\.(jpe?g|png|webp|avif|gif)$/i.test(name)) continue;
+        if (files.some((f) => f.name === name)) continue;
+        files.push({ name, time: fs.statSync(path.join(dir, name)).mtimeMs });
+      }
+    } catch { /* folder may not exist */ }
+  }
+  files.sort((a, b) => b.time - a.time);
+
+  const newestFor = (prefix: string) =>
+    files.find((f) => f.name.toLowerCase().startsWith(prefix.toLowerCase() + "-"))?.name;
+
+  let fixed = 0;
+
+  for (const item of await prisma.exploreItem.findMany({ where: { image: "" } })) {
+    const found = newestFor(`explore-${item.slug}`);
+    if (found) {
+      await prisma.exploreItem.update({ where: { id: item.id }, data: { image: `/uploads/${found}` } });
+      fixed++;
+    }
+  }
+
+  for (const room of await prisma.room.findMany({ where: { heroImage: "" } })) {
+    const found = newestFor(room.slug);
+    if (found) {
+      await prisma.room.update({ where: { id: room.id }, data: { heroImage: `/uploads/${found}` } });
+      fixed++;
+    }
+  }
+
+  for (const page of await prisma.page.findMany({ where: { heroImage: "" } })) {
+    const found = newestFor(`${page.slug}-hero`);
+    if (found) {
+      await prisma.page.update({ where: { id: page.id }, data: { heroImage: `/uploads/${found}` } });
+      fixed++;
+    }
+  }
+
+  revalidatePath("/", "layout");
+  redirect(`/admin/explore?relinked=${fixed}`);
+}

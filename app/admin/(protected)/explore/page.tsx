@@ -2,11 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { getAllExploreItems } from "@/lib/data";
 import { SavedBanner } from "@/components/admin/fields";
+import { relinkPhotosAction } from "@/lib/actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExploreList({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
-  const { saved, deleted } = await searchParams;
+export default async function ExploreList({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string; relinked?: string }> }) {
+  const { saved, deleted, relinked } = await searchParams;
   const items = await getAllExploreItems();
 
   return (
@@ -23,6 +24,24 @@ export default async function ExploreList({ searchParams }: { searchParams: Prom
       </p>
       <SavedBanner show={saved === "1"} text="Card saved - live now." />
       <SavedBanner show={deleted === "1"} text="Card deleted." />
+      {relinked !== undefined && (
+        <SavedBanner show text={
+          Number(relinked) > 0
+            ? Number(relinked) === 1
+              ? "Reconnected 1 photo that had lost its link."
+              : `Reconnected ${relinked} photos that had lost their links.`
+            : "No missing photos found. Everything on the server is already connected."
+        } />
+      )}
+
+      <form action={relinkPhotosAction} className="mb-5">
+        <button className="text-sm text-navy underline hover:no-underline">
+          Photos missing? Reconnect them
+        </button>
+        <span className="block text-xs text-ink/50 mt-1">
+          Looks for photos still on the server that a card has lost track of, and puts them back.
+        </span>
+      </form>
 
       <ul className="space-y-2">
         {items.map((it) => (

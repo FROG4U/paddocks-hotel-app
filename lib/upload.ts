@@ -2,8 +2,7 @@ import "server-only";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import sharp from "sharp";
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+import { UPLOAD_DIR } from "./storage";
 
 // Photos are never displayed wider than the page, so there is no point
 // storing anything bigger. 1800px covers a full-width banner on a large

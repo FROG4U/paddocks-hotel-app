@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
  * Reading the file from disk on each request fixes that: an upload appears
  * on the site straight away.
  */
-const DIR = path.join(process.cwd(), "public", "uploads");
+import { uploadDirs } from "@/lib/storage";
 
 const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -27,28 +27,29 @@ const TYPES: Record<string, string> = {
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await ctx.params;
 
-  // Resolve inside the uploads folder and refuse anything that escapes it.
-  const target = path.resolve(DIR, ...segments);
-  if (!target.startsWith(DIR + path.sep)) {
-    return new Response("Not found", { status: 404 });
-  }
-
-  const type = TYPES[path.extname(target).toLowerCase()];
+  const type = TYPES[path.extname(segments[segments.length - 1] || "").toLowerCase()];
   if (!type) return new Response("Not found", { status: 404 });
 
-  try {
-    const info = await stat(target);
-    if (!info.isFile()) return new Response("Not found", { status: 404 });
-    const body = await readFile(target);
-    return new Response(new Uint8Array(body), {
-      headers: {
-        "Content-Type": type,
-        "Content-Length": String(info.size),
-        // Filenames carry a timestamp, so a given URL never changes.
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-  } catch {
-    return new Response("Not found", { status: 404 });
+  // Look in the live data folder first, then the older in-repo folder.
+  for (const dir of uploadDirs()) {
+    // Resolve inside the folder and refuse anything that escapes it.
+    const target = path.resolve(dir, ...segments);
+    if (!target.startsWith(dir + path.sep)) continue;
+
+    try {
+      const info = await stat(target);
+      if (!info.isFile()) continue;
+      const body = await readFile(target);
+      return new Response(new Uint8Array(body), {
+        headers: {
+          "Content-Type": type,
+          "Content-Length": String(info.size),
+          // Filenames carry a timestamp, so a given URL never changes.
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    } catch { /* try the next folder */ }
   }
+
+  return new Response("Not found", { status: 404 });
 }
