@@ -40,7 +40,7 @@ const GLANCE = [
   {
     icon: "/icons/gold-location.png",
     title: "Location",
-    text: "In Symonds Yat West, midway between Ross-on-Wye and Monmouth, with the River Wye, Symonds Yat Rock and the Forest of Dean on the doorstep.",
+    text: "10 mins from Monmouth, 15 mins from Ross-on-Wye and 40 mins from Gloucester, with the River Wye and the Forest of Dean on the doorstep.",
   },
   {
     icon: "/icons/gold-parking.png",
