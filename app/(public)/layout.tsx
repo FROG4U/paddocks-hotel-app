@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
+import ChatWidget from "@/components/ChatWidget";
 import { getNav, getSettings } from "@/lib/data";
 import { hotelJsonLd, JsonLd, keywordList, siteUrl } from "@/lib/seo";
 
@@ -39,6 +40,9 @@ export default async function PublicLayout({ children }: { children: React.React
       />
       <main className="flex-1">{children}</main>
       <SiteFooter />
+      {s.chatEnabled && (
+        <ChatWidget name={s.chatName} greeting={s.chatGreeting} phone={s.phone} email={s.email} />
+      )}
     </>
   );
 }

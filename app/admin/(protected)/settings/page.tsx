@@ -1,6 +1,6 @@
 import { getSettings, parseHours } from "@/lib/data";
 import { saveSettingsAction } from "@/lib/actions";
-import { Text, TextArea, ImageField, SaveBar, SavedBanner, Card, ErrorBanner } from "@/components/admin/fields";
+import { Text, TextArea, ImageField, Toggle, SaveBar, SavedBanner, Card, ErrorBanner } from "@/components/admin/fields";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +67,14 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <Text label="Button (tan)" name="buttonColor" defaultValue={s.buttonColor} />
             <Text label="Accent (red)" name="accentColor" defaultValue={s.accentColor} />
           </div>
+        </Card>
+
+        <Card title="Chat assistant">
+          <Toggle label="Show the chat button on the website" name="chatEnabled" defaultChecked={s.chatEnabled} />
+          <Text label="Assistant name" name="chatName" defaultValue={s.chatName}
+            hint="Shown at the top of the chat window, e.g. Paddocks Assistant" />
+          <TextArea label="Opening message" name="chatGreeting" defaultValue={s.chatGreeting} rows={3}
+            hint="The first thing a visitor sees when they open the chat." />
         </Card>
 
         <Card title="Google & SEO">

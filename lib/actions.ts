@@ -88,6 +88,9 @@ export async function saveSettingsAction(fd: FormData) {
       instagramUrl: str(fd, "instagramUrl"),
       googleUrl: str(fd, "googleUrl"),
       tiktokUrl: str(fd, "tiktokUrl"),
+      chatEnabled: bool(fd, "chatEnabled"),
+      chatName: str(fd, "chatName") || "Paddocks Assistant",
+      chatGreeting: str(fd, "chatGreeting"),
       bookCtaLabel: str(fd, "bookCtaLabel"),
       bookCtaHref: str(fd, "bookCtaHref"),
       siteUrl: str(fd, "siteUrl").trim().replace(/\/$/, ""),
@@ -349,4 +352,60 @@ export async function discardSeoDraftAction(fd: FormData) {
   const id = str(fd, "id");
   if (id) await prisma.seoDraft.delete({ where: { id } }).catch(() => {});
   redirect("/admin/seo");
+}
+
+// ── Contact form ──
+export async function sendMessageAction(
+  _prev: { ok: boolean; error: string },
+  fd: FormData,
+): Promise<{ ok: boolean; error: string }> {
+  // Honeypot: bots fill every field they find.
+  if (str(fd, "website").trim()) return { ok: true, error: "" };
+
+  const name = str(fd, "name").trim();
+  const email = str(fd, "email").trim();
+  const body = str(fd, "body").trim();
+  if (!name || !email || !body) {
+    return { ok: false, error: "Please fill in your name, email and message." };
+  }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return { ok: false, error: "That email address does not look right." };
+  }
+  if (body.length > 5000) {
+    return { ok: false, error: "That message is too long. Please keep it under 5000 characters." };
+  }
+
+  await prisma.message.create({
+    data: {
+      name, email,
+      phone: str(fd, "phone").trim(),
+      subject: str(fd, "subject").trim() || "Enquiry",
+      body,
+      source: "contact",
+    },
+  });
+  return { ok: true, error: "" };
+}
+
+// ── Messages inbox ──
+export async function markMessageAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const action = str(fd, "do");
+  if (!id) redirect("/admin/messages");
+
+  if (action === "delete") await prisma.message.delete({ where: { id } }).catch(() => {});
+  else if (action === "archive") await prisma.message.update({ where: { id }, data: { archived: true, read: true } });
+  else if (action === "restore") await prisma.message.update({ where: { id }, data: { archived: false } });
+  else if (action === "unread") await prisma.message.update({ where: { id }, data: { read: false } });
+  else await prisma.message.update({ where: { id }, data: { read: true } });
+
+  redirect(str(fd, "back") || "/admin/messages");
+}
+
+export async function deleteConversationAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  if (id) await prisma.chatConversation.delete({ where: { id } }).catch(() => {});
+  redirect("/admin/chat");
 }

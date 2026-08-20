@@ -2,11 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/chat", label: "Chat" },
   { href: "/admin/pages", label: "Pages" },
   { href: "/admin/rooms", label: "Rooms & Prices" },
   { href: "/admin/explore", label: "Explore" },
@@ -18,6 +21,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
+  const unread = await prisma.message.count({ where: { read: false, archived: false } });
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-cream/40">
       <aside className="md:w-60 bg-navy text-white flex-shrink-0">
@@ -28,8 +33,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="p-3 space-y-1">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href}
-              className="block px-3 py-2 rounded-md text-sm text-white/85 hover:bg-white/10">
-              {n.label}
+              className="flex items-center justify-between px-3 py-2 rounded-md text-sm text-white/85 hover:bg-white/10">
+              <span>{n.label}</span>
+              {n.href === "/admin/messages" && unread > 0 && (
+                <span className="bg-gold text-navy text-xs font-bold rounded-full px-2 py-0.5">{unread}</span>
+              )}
             </Link>
           ))}
           <a href="/" target="_blank"

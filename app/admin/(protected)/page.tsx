@@ -5,14 +5,18 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const [rooms, pages, explore, s] = await Promise.all([
+  const [rooms, pages, explore, unread, chats, s] = await Promise.all([
     getRooms(),
     prisma.page.count(),
     prisma.exploreItem.count(),
+    prisma.message.count({ where: { read: false, archived: false } }),
+    prisma.chatConversation.count(),
     getSettings(),
   ]);
 
   const cards = [
+    { href: "/admin/messages", title: "Messages", desc: unread > 0 ? `${unread} new enquiry${unread === 1 ? "" : " messages"} waiting` : "Enquiries from the contact form", emoji: "✉️" },
+    { href: "/admin/chat", title: "Chat", desc: `${chats} conversation${chats === 1 ? "" : "s"} with the website assistant`, emoji: "💬" },
     { href: "/admin/pages", title: "Pages", desc: `${pages} pages - edit text, headings & photos`, emoji: "📄" },
     { href: "/admin/rooms", title: "Rooms & Prices", desc: `${rooms.length} rooms - details, photos & prices`, emoji: "🛏️" },
     { href: "/admin/explore", title: "Explore", desc: `${explore} cards - places to visit nearby`, emoji: "🗺️" },

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Hero from "@/components/Hero";
+import ContactForm from "@/components/ContactForm";
 import WeddingPackages from "@/components/WeddingPackages";
 import { getPage, getSettings, parseSections } from "@/lib/data";
 import { breadcrumbJsonLd, JsonLd, pageMetadata } from "@/lib/seo";
@@ -92,6 +93,11 @@ export default async function ContentPage({ params }: { params: Promise<{ slug: 
             <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden shadow">
               <iframe title="Map" src={mapSrc} className="absolute inset-0 w-full h-full border-0" loading="lazy" />
             </div>
+          </div>
+
+          <div className="mx-auto max-w-3xl px-6 mt-16">
+            <h2 className="section-title text-center mb-8">Send us a message</h2>
+            <ContactForm />
           </div>
         </section>
       )}
