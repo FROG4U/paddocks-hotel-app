@@ -22,7 +22,7 @@ on Plesk (Phusion Passenger), the same way the Freedom Church site runs.
 3. Get the code onto the server (Plesk Git → this repo → deploy to the Application Root).
 4. Click **NPM install**.
 5. Click **Run script** → `build` (compiles the site; runs `prisma generate` + `next build`).
-6. Click **Run script** → `setup:db` (creates + seeds the SQLite database — safe to re-run).
+6. Click **Run script** → `setup:db` (creates + seeds the SQLite database - safe to re-run).
 7. Click **Restart App**.
 8. Point the domain's document root / proxy at the Node app (Plesk does this automatically
    when Node.js is enabled for the domain).
@@ -37,5 +37,5 @@ on Plesk (Phusion Passenger), the same way the Freedom Church site runs.
 
 - The SQLite database (`prisma/dev.db`) and user-uploaded images (`public/uploads/…`)
   are **not** in git, so redeploys don't wipe your content.
-- Public pages are `force-dynamic` — edits in `/admin` appear on the live site immediately.
+- Public pages are `force-dynamic` - edits in `/admin` appear on the live site immediately.
 - `npm run setup:db` is safe on every deploy: it never overwrites existing content or the admin password.

@@ -1,4 +1,4 @@
-// The Paddocks Hotel — database schema (SQLite)
+// The Paddocks Hotel - database schema (SQLite)
 // Everything editable from /admin lives here. Public pages render with
 // `force-dynamic`, so edits appear on the live site instantly (no rebuild).
 
@@ -45,7 +45,7 @@ model SiteSettings {
   mapQuery     String @default("The Paddocks Hotel, Wye View Ln, Symonds Yat West, Ross-on-Wye HR9 6BL")
 
   // Opening hours (one line per day-range)
-  hoursJson String @default("[{\"label\":\"Mon–Fri\",\"value\":\"5pm – 10.30pm\"},{\"label\":\"Saturday\",\"value\":\"5pm – 11.00pm\"}]")
+  hoursJson String @default("[{\"label\":\"Mon-Fri\",\"value\":\"5pm - 10.30pm\"},{\"label\":\"Saturday\",\"value\":\"5pm - 11.00pm\"}]")
 
   // Social links
   facebookUrl  String @default("https://facebook.com")
@@ -58,7 +58,7 @@ model SiteSettings {
   bookCtaHref  String @default("/contact")
 
   // SEO defaults + footer
-  metaTitle       String @default("The Paddocks Hotel — Ross-on-Wye")
+  metaTitle       String @default("The Paddocks Hotel - Ross-on-Wye")
   metaDescription String @default("The Paddocks Hotel & Indian Restaurant in the heart of Ross-on-Wye. Rooms, weddings, celebrations, dining and more.")
   footerNote      String @default("© The Paddocks Hotel. All rights reserved.")
 

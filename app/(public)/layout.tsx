@@ -6,7 +6,7 @@ import { getNav, getSettings } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 // Dynamic default title/description/favicon for the public site (runs at
-// request time — these pages are force-dynamic — so edits in /admin apply).
+// request time - these pages are force-dynamic - so edits in /admin apply).
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSettings();
   return {

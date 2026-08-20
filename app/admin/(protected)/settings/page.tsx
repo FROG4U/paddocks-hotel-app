@@ -41,8 +41,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <Card title="Opening hours">
           {rows.map((h, i) => (
             <div key={i} className="grid grid-cols-2 gap-4">
-              <Text label={i === 0 ? "Day(s)" : ""} name={`hours_label_${i}`} defaultValue={h.label} placeholder="e.g. Mon–Fri" />
-              <Text label={i === 0 ? "Hours" : ""} name={`hours_value_${i}`} defaultValue={h.value} placeholder="e.g. 5pm – 10.30pm" />
+              <Text label={i === 0 ? "Day(s)" : ""} name={`hours_label_${i}`} defaultValue={h.label} placeholder="e.g. Mon-Fri" />
+              <Text label={i === 0 ? "Hours" : ""} name={`hours_value_${i}`} defaultValue={h.value} placeholder="e.g. 5pm - 10.30pm" />
             </div>
           ))}
           <p className="text-xs text-ink/50">Leave a row blank to remove it.</p>
@@ -51,7 +51,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <Card title="Social & booking">
           <Text label="Facebook URL" name="facebookUrl" defaultValue={s.facebookUrl} />
           <Text label="Instagram URL" name="instagramUrl" defaultValue={s.instagramUrl} />
-          <Text label="Google URL" name="googleUrl" defaultValue={s.googleUrl} hint="Your Google Business / reviews link — leave blank to hide the icon" />
+          <Text label="Google URL" name="googleUrl" defaultValue={s.googleUrl} hint="Your Google Business / reviews link - leave blank to hide the icon" />
           <Text label="TikTok URL" name="tiktokUrl" defaultValue={s.tiktokUrl} hint="Leave blank to hide the icon" />
           <div className="grid grid-cols-2 gap-4">
             <Text label="Booking button text" name="bookCtaLabel" defaultValue={s.bookCtaLabel} />

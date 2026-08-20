@@ -12,8 +12,8 @@ export default async function Dashboard() {
   ]);
 
   const cards = [
-    { href: "/admin/pages", title: "Pages", desc: `${pages} pages — edit text, headings & photos`, emoji: "📄" },
-    { href: "/admin/rooms", title: "Rooms & Prices", desc: `${rooms.length} rooms — details, photos & prices`, emoji: "🛏️" },
+    { href: "/admin/pages", title: "Pages", desc: `${pages} pages - edit text, headings & photos`, emoji: "📄" },
+    { href: "/admin/rooms", title: "Rooms & Prices", desc: `${rooms.length} rooms - details, photos & prices`, emoji: "🛏️" },
     { href: "/admin/settings", title: "Contact & Settings", desc: "Address, phone, hours, social, branding", emoji: "⚙️" },
   ];
 

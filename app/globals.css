@@ -34,7 +34,7 @@ body {
 
 /* ── Type styles copied from the original site ────────────────────────── */
 
-/* Nav / small Copperplate caps — 16px uppercase on the original header */
+/* Nav / small Copperplate caps - 16px uppercase on the original header */
 .nav-link {
   font-family: var(--font-slab), Georgia, serif;
   text-transform: uppercase;

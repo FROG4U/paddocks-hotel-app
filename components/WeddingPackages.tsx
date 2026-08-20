@@ -25,7 +25,7 @@ const PACKAGES: Pkg[] = [
           "Exclusive use of the hotel from 12pm on the wedding day until 11am the next day",
           "Complimentary Bridal Suite including breakfast",
           "10% discount on guest bedrooms (booked direct)",
-          "Ballroom dressed in white — tables & chairs",
+          "Ballroom dressed in white - tables & chairs",
           "Welcome drink (prosecco or orange juice)",
           "Two-course hot buffet wedding breakfast",
           "Glass of prosecco per person to toast",
@@ -49,7 +49,7 @@ const PACKAGES: Pkg[] = [
           "Exclusive use of the hotel from 7am on the wedding day",
           "Exclusive use of the ballroom from 4pm the day before for set-up",
           "10% discount on guest bedrooms (booked direct)",
-          "Ballroom dressed in white — tables & chairs",
+          "Ballroom dressed in white - tables & chairs",
           "Welcome drinks for 80 guests (prosecco or orange juice)",
           "Three-course wedding breakfast",
           "Glass of prosecco for toast",
@@ -164,7 +164,7 @@ export default function WeddingPackages({ ctaHref = "/contact" }: { ctaHref?: st
         </div>
 
         <p className="text-center text-ink/70 mt-12 max-w-2xl mx-auto">
-          Every wedding is different — packages can be tailored to your day and your budget. Please
+          Every wedding is different - packages can be tailored to your day and your budget. Please
           get in touch for full details and to arrange a viewing.
         </p>
       </div>

@@ -11,7 +11,7 @@ type Props = {
 };
 
 /**
- * Hero / image banner — matches the original design at paddock.frog4u.com:
+ * Hero / image banner - matches the original design at paddock.frog4u.com:
  * full-height hero (100vh) or a fixed 700px banner, a flat black 50% overlay,
  * Montserrat eyebrow in sentence case, Copperplate 105px/75px headline and a
  * square Archivo button.

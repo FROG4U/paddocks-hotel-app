@@ -57,7 +57,7 @@ export function ImageField({ label, name, current, hint }: {
   );
 }
 
-export function SavedBanner({ show, text = "Saved — changes are live." }: { show?: boolean; text?: string }) {
+export function SavedBanner({ show, text = "Saved - changes are live." }: { show?: boolean; text?: string }) {
   if (!show) return null;
   return <div className="mb-5 rounded-md bg-green-600 text-white text-sm px-4 py-2.5">✓ {text}</div>;
 }

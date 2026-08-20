@@ -10,7 +10,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const room = await getRoom(slug);
   if (!room) return {};
   return {
-    title: room.metaTitle || `${room.name} — The Paddocks Hotel`,
+    title: room.metaTitle || `${room.name} - The Paddocks Hotel`,
     description: room.metaDescription || room.shortDesc,
   };
 }

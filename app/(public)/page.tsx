@@ -6,7 +6,7 @@ import { getPage, getSettings, parseSections } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 /**
- * Home page — a section-for-section copy of the original design at
+ * Home page - a section-for-section copy of the original design at
  * paddock.frog4u.com: type sizes, capitalisation, colours, image crops and
  * section heights all match the original.
  */
@@ -30,12 +30,12 @@ const GLANCE = [
   {
     icon: "/icons/gold-bedroom.png",
     title: "Bed Rooms",
-    text: "Comfortable, quiet en-suite rooms with everything you need to unwind — sink into a proper bed after a day out in the Wye Valley.",
+    text: "Comfortable, quiet en-suite rooms with everything you need to unwind - sink into a proper bed after a day out in the Wye Valley.",
   },
   {
     icon: "/icons/gold-tree.png",
     title: "Garden Space",
-    text: "Lawns, a gazebo and a pretty terrace — a lovely outdoor setting for wedding ceremonies, drinks receptions, parties and summer events.",
+    text: "Lawns, a gazebo and a pretty terrace - a lovely outdoor setting for wedding ceremonies, drinks receptions, parties and summer events.",
   },
   {
     icon: "/icons/gold-location.png",
@@ -45,7 +45,7 @@ const GLANCE = [
   {
     icon: "/icons/gold-parking.png",
     title: "Parking",
-    text: "Plenty of free parking right outside for guests and events — arrive, park up and leave the car where it is until you head home again.",
+    text: "Plenty of free parking right outside for guests and events - arrive, park up and leave the car where it is until you head home again.",
   },
 ];
 
@@ -59,7 +59,7 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1 — Hero (full viewport height) */}
+      {/* 1 - Hero (full viewport height) */}
       <Hero
         eyebrow={page?.heroEyebrow}
         title={page?.heroTitle || s.siteName}
@@ -70,7 +70,7 @@ export default async function HomePage() {
         size="full"
       />
 
-      {/* 2 — Quick links strip (navy, 147px tall on desktop) */}
+      {/* 2 - Quick links strip (navy, 147px tall on desktop) */}
       <section className="bg-navy px-[10px]">
         <div className="mx-auto max-w-[756px] flex flex-wrap justify-center gap-y-5 gap-x-[5px] pt-5 pb-[18px]">
           {QUICK.map((q) => (
@@ -84,7 +84,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 3 — Welcome */}
+      {/* 3 - Welcome */}
       <section className="bg-white">
         <div className="mx-auto max-w-[1140px] px-6 pt-[70px] pb-[80px] lg:pt-[102px] lg:pb-[117px] text-center flex flex-col gap-5">
           <p className="eyebrow text-navy">Welcome to</p>
@@ -96,11 +96,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 4 — Relax & Unwind */}
+      {/* 4 - Relax & Unwind */}
       <Hero image="/uploads/king-room.jpg" eyebrow="Book our rooms" title="Relax & Unwind"
         ctaLabel="Book Now" ctaHref={s.bookCtaHref} />
 
-      {/* 5 — Eat & Drink (cream) */}
+      {/* 5 - Eat & Drink (cream) */}
       <section className="bg-cream px-6 lg:px-16">
         <div className="mx-auto max-w-[1140px] pt-[90px] pb-[112px] text-center">
           <h2 className="section-title">Eat &amp; Drink</h2>
@@ -117,11 +117,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 6 — Weddings */}
+      {/* 6 - Weddings */}
       <Hero image="/uploads/weddings.jpg" eyebrow="Celebrate" title="Weddings"
         ctaLabel="Discover Now" ctaHref="/weddings" />
 
-      {/* 7 — At a Glance (navy) */}
+      {/* 7 - At a Glance (navy) */}
       <section className="bg-navy">
         <div className="mx-auto max-w-[1140px] px-6 pt-[51px] text-center">
           <h2 className="section-title">At a Glance</h2>
@@ -139,7 +139,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 8 — Corporate & Private Events */}
+      {/* 8 - Corporate & Private Events */}
       <Hero image="/uploads/corporate.jpg" eyebrow="Celebrate" title={"Corporate &\nPrivate Events"}
         ctaLabel="Discover Now" ctaHref="/meeting-room" />
     </>

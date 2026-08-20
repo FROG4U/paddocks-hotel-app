@@ -16,7 +16,7 @@ export default async function RoomsList({ searchParams }: { searchParams: Promis
           + Add room
         </Link>
       </div>
-      <SavedBanner show={saved === "1"} text="Room saved — live now." />
+      <SavedBanner show={saved === "1"} text="Room saved - live now." />
       <SavedBanner show={deleted === "1"} text="Room deleted." />
 
       <ul className="space-y-2">

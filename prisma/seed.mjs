@@ -9,7 +9,7 @@ const ADMIN_PASSWORD = "Paddocks2026!";
 async function main() {
   // ── Admin ──
   const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
-  // update: {} — never overwrite an existing admin's password on re-seed / redeploy.
+  // update: {} - never overwrite an existing admin's password on re-seed / redeploy.
   await prisma.admin.upsert({
     where: { email: ADMIN_EMAIL },
     update: {},
@@ -26,7 +26,7 @@ async function main() {
   // ── Rooms ──
   const rooms = [
     { name: "King Room", slug: "king-room", image: "/uploads/king-room.jpg",
-      desc: "Our most spacious room with a comfortable king-size bed, en-suite bathroom and beautiful views — perfect for couples looking to relax." },
+      desc: "Our most spacious room with a comfortable king-size bed, en-suite bathroom and beautiful views - perfect for couples looking to relax." },
     { name: "Double Room", slug: "double-room", image: "/uploads/double-room.jpg",
       desc: "A warm and welcoming double room with a plush double bed and all the comforts you need for a restful stay." },
     { name: "Family Room", slug: "family-room", image: "/uploads/family-room.jpg",
@@ -34,7 +34,7 @@ async function main() {
     { name: "Twin Room", slug: "twin-room", image: "/uploads/twin-room.jpg",
       desc: "Two comfortable single beds, ideal for friends or colleagues travelling together, with a bright and airy layout." },
     { name: "Single Room", slug: "single-room", image: "/uploads/single-room.jpg",
-      desc: "A snug, well-appointed single room — everything the solo traveller needs for a comfortable stay." },
+      desc: "A snug, well-appointed single room - everything the solo traveller needs for a comfortable stay." },
   ];
   for (let i = 0; i < rooms.length; i++) {
     const r = rooms[i];
@@ -45,7 +45,7 @@ async function main() {
         name: r.name, slug: r.slug, order: i, heroEyebrow: "Book Our",
         heroImage: r.image, description: r.desc, shortDesc: r.desc,
         price: "", showPrice: false,
-        metaTitle: `${r.name} — The Paddocks Hotel`,
+        metaTitle: `${r.name} - The Paddocks Hotel`,
         metaDescription: r.desc,
       },
     });
@@ -78,7 +78,7 @@ async function main() {
     { slug: "bar", title: "Bar", navLabel: "Bar", navGroup: "food", order: 5,
       heroEyebrow: "The Paddocks Hotel", heroTitle: "Our Bar",
       heroSubtitle: "Relax with a drink", heroImage: "/uploads/bar.jpg",
-      sections: [{ heading: "Unwind at the bar", body: "A relaxed bar serving a great selection of drinks — the perfect spot before or after dinner.", image: "", imageSide: "right" }] },
+      sections: [{ heading: "Unwind at the bar", body: "A relaxed bar serving a great selection of drinks - the perfect spot before or after dinner.", image: "", imageSide: "right" }] },
     { slug: "contact", title: "Contact Us", navLabel: "CONTACT US", navGroup: "", order: 6,
       heroEyebrow: "The Paddocks", heroTitle: "Contact Us",
       heroSubtitle: "Indian restaurant in the heart of Ross-on-Wye", heroImage: "/uploads/contact.jpg",
@@ -94,7 +94,7 @@ async function main() {
         heroEyebrow: p.heroEyebrow, heroTitle: p.heroTitle,
         heroSubtitle: p.heroSubtitle, heroImage: p.heroImage,
         sectionsJson: JSON.stringify(p.sections),
-        metaTitle: `${p.title} — The Paddocks Hotel`,
+        metaTitle: `${p.title} - The Paddocks Hotel`,
         metaDescription: p.heroSubtitle,
       },
     });
