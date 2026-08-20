@@ -16,6 +16,17 @@ export async function getRoom(slug: string) {
   return prisma.room.findUnique({ where: { slug } });
 }
 
+export async function getExploreItems() {
+  return prisma.exploreItem.findMany({
+    where: { published: true },
+    orderBy: { order: "asc" },
+  });
+}
+
+export async function getAllExploreItems() {
+  return prisma.exploreItem.findMany({ orderBy: { order: "asc" } });
+}
+
 export async function getPage(slug: string) {
   return prisma.page.findUnique({ where: { slug } });
 }
@@ -27,14 +38,16 @@ export async function getPagesByGroup(group: string) {
   });
 }
 
-// Build the top navigation: Home · Our Rooms(▾) · Explore(▾) · Food & Bar(▾) · Contact Us
+// Build the top navigation:
+// Home · Our Rooms(▾) · What We Offer(▾) · Explore · Food & Bar(▾) · Contact Us
 export async function getNav(): Promise<NavItem[]> {
-  const [rooms, explore, food, home, contact] = await Promise.all([
+  const [rooms, offer, food, home, contact, exploreItems] = await Promise.all([
     getRooms(),
     getPagesByGroup("explore"),
     getPagesByGroup("food"),
     getPage("home"),
     getPage("contact"),
+    getExploreItems(),
   ]);
 
   const nav: NavItem[] = [];
@@ -45,12 +58,13 @@ export async function getNav(): Promise<NavItem[]> {
       href: "#",
       children: rooms.map((r) => ({ label: r.name, href: `/rooms/${r.slug}` })),
     });
-  if (explore.length)
+  if (offer.length)
     nav.push({
-      label: "EXPLORE",
+      label: "WHAT WE OFFER",
       href: "#",
-      children: explore.map((p) => ({ label: p.navLabel || p.title, href: `/${p.slug}` })),
+      children: offer.map((p) => ({ label: p.navLabel || p.title, href: `/${p.slug}` })),
     });
+  if (exploreItems.length) nav.push({ label: "EXPLORE", href: "/explore" });
   if (food.length)
     nav.push({
       label: "FOOD & BAR",

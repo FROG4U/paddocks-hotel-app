@@ -5,15 +5,17 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const [rooms, pages, s] = await Promise.all([
+  const [rooms, pages, explore, s] = await Promise.all([
     getRooms(),
     prisma.page.count(),
+    prisma.exploreItem.count(),
     getSettings(),
   ]);
 
   const cards = [
     { href: "/admin/pages", title: "Pages", desc: `${pages} pages - edit text, headings & photos`, emoji: "📄" },
     { href: "/admin/rooms", title: "Rooms & Prices", desc: `${rooms.length} rooms - details, photos & prices`, emoji: "🛏️" },
+    { href: "/admin/explore", title: "Explore", desc: `${explore} cards - places to visit nearby`, emoji: "🗺️" },
     { href: "/admin/settings", title: "Contact & Settings", desc: "Address, phone, hours, social, branding", emoji: "⚙️" },
   ];
 

@@ -108,3 +108,20 @@ model Room {
 
   updatedAt DateTime @updatedAt
 }
+
+// ── Explore: cards linking out to things to do in the local area ──
+// Each card is a photo, a title, a short description and a button that
+// opens an external website in a new tab. Managed from /admin/explore.
+model ExploreItem {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  title       String
+  description String  @default("")
+  image       String  @default("")
+  linkUrl     String  @default("")
+  buttonLabel String  @default("View")
+  order       Int     @default(0)
+  published   Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+}

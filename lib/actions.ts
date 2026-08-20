@@ -172,3 +172,55 @@ export async function deleteRoomAction(fd: FormData) {
   revalidatePath("/", "layout");
   redirect("/admin/rooms?deleted=1");
 }
+
+// ── Explore cards (create / update / delete) ──
+export async function saveExploreAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const title = str(fd, "title").trim();
+  const slugify = (v: string) =>
+    v.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  let slug = slugify(str(fd, "slug").trim()) || slugify(title);
+  if (!slug) slug = `card-${Date.now()}`;
+
+  // Keep slugs unique so two cards can share a title without clashing.
+  const clash = await prisma.exploreItem.findUnique({ where: { slug } });
+  if (clash && clash.id !== id) slug = `${slug}-2`;
+
+  const image = await saveUploadedImage(file(fd, "imageFile"), `explore-${slug}`);
+
+  let linkUrl = str(fd, "linkUrl").trim();
+  // Accept "mazes.co.uk" as well as a full address.
+  if (linkUrl && !/^https?:\/\//i.test(linkUrl) && !linkUrl.startsWith("/")) {
+    linkUrl = `https://${linkUrl}`;
+  }
+
+  const data = {
+    slug,
+    title,
+    description: str(fd, "description"),
+    linkUrl,
+    buttonLabel: str(fd, "buttonLabel", "View") || "View",
+    order: parseInt(str(fd, "order", "0")) || 0,
+    published: bool(fd, "published"),
+  };
+
+  if (id && id !== "new") {
+    await prisma.exploreItem.update({
+      where: { id },
+      data: { ...data, ...(image ? { image } : {}) },
+    });
+  } else {
+    await prisma.exploreItem.create({ data: { ...data, image: image || "" } });
+  }
+  revalidatePath("/", "layout");
+  redirect("/admin/explore?saved=1");
+}
+
+export async function deleteExploreAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  if (id) await prisma.exploreItem.delete({ where: { id } });
+  revalidatePath("/", "layout");
+  redirect("/admin/explore?deleted=1");
+}

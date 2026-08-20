@@ -79,6 +79,10 @@ async function main() {
       heroEyebrow: "The Paddocks Hotel", heroTitle: "Our Bar",
       heroSubtitle: "Relax with a drink", heroImage: "/uploads/bar.jpg",
       sections: [{ heading: "Unwind at the bar", body: "A relaxed bar serving a great selection of drinks - the perfect spot before or after dinner.", image: "", imageSide: "right" }] },
+    { slug: "explore", title: "Explore", navLabel: "EXPLORE", navGroup: "", order: 5,
+      heroEyebrow: "Discover", heroTitle: "Explore",
+      heroSubtitle: "The Wye Valley and Forest of Dean on your doorstep", heroImage: "/uploads/home.jpg",
+      sections: [{ heading: "Things to do nearby", body: "We are lucky to sit right in the middle of one of the loveliest corners of the country. Here are some of our favourite places to visit, all within easy reach of the hotel.", image: "", imageSide: "right" }] },
     { slug: "contact", title: "Contact Us", navLabel: "CONTACT US", navGroup: "", order: 6,
       heroEyebrow: "The Paddocks", heroTitle: "Contact Us",
       heroSubtitle: "Indian restaurant in the heart of Ross-on-Wye", heroImage: "/uploads/contact.jpg",
@@ -90,7 +94,7 @@ async function main() {
       update: {},
       create: {
         slug: p.slug, title: p.title, navLabel: p.navLabel, navGroup: p.navGroup,
-        order: p.order, showInNav: true,
+        order: p.order, showInNav: p.slug !== "explore",
         heroEyebrow: p.heroEyebrow, heroTitle: p.heroTitle,
         heroSubtitle: p.heroSubtitle, heroImage: p.heroImage,
         sectionsJson: JSON.stringify(p.sections),
@@ -100,7 +104,58 @@ async function main() {
     });
   }
 
-  console.log("✅ Seeded: admin, settings,", rooms.length, "rooms,", pages.length, "pages");
+
+  // ── Explore cards (things to do around Symonds Yat West) ──
+  const explore = [
+    { slug: "symonds-yat-rock", title: "Symonds Yat Rock", order: 1,
+      link: "https://www.forestryengland.uk/symonds-yat-rock",
+      desc: "The most famous view in the Wye Valley, looking down over the river as it loops through the gorge. Watch for peregrine falcons nesting on the cliffs." },
+    { slug: "amazing-hedge-puzzle", title: "aMazing Hedge Puzzle", order: 2,
+      link: "https://www.mazes.co.uk",
+      desc: "A classic hedge maze just up the road in Symonds Yat West, along with the Museum of Mazes. Great fun for families on a dry afternoon." },
+    { slug: "butterfly-zoo", title: "Wye Valley Butterfly Zoo", order: 3,
+      link: "https://www.butterflyzoo.co.uk",
+      desc: "A tropical hothouse full of free-flying butterflies, minutes from the hotel. An easy, warm visit whatever the weather is doing." },
+    { slug: "canoe-the-wye", title: "Canoeing on the Wye", order: 4,
+      link: "https://www.wyevalleycanoes.co.uk",
+      desc: "Hire a canoe, kayak or paddleboard and take to the river. Trips run from gentle half-days to full runs down to Monmouth." },
+    { slug: "wye-valley-cruises", title: "River Cruises", order: 5,
+      link: "https://www.wyevalleycruises.co.uk",
+      desc: "A relaxed boat trip along the Wye with commentary on the wildlife and history of the gorge. No effort required." },
+    { slug: "goodrich-castle", title: "Goodrich Castle", order: 6,
+      link: "https://www.english-heritage.org.uk/visit/places/goodrich-castle/",
+      desc: "A wonderfully complete medieval castle above the river, with a maze of towers and passages to climb. Around fifteen minutes away." },
+    { slug: "puzzlewood", title: "Puzzlewood", order: 7,
+      link: "https://www.puzzlewood.net",
+      desc: "An otherworldly ancient woodland of mossy paths and twisted roots, used as a filming location for Star Wars and Doctor Who." },
+    { slug: "clearwell-caves", title: "Clearwell Caves", order: 8,
+      link: "https://www.clearwellcaves.com",
+      desc: "Nine caverns of natural caves and iron mines worked for thousands of years, deep under the Forest of Dean." },
+    { slug: "dean-forest-railway", title: "Dean Forest Railway", order: 9,
+      link: "https://www.deanforestrailway.co.uk",
+      desc: "A preserved steam railway running through the forest between Lydney and Parkend. Special events run right through the year." },
+    { slug: "forest-cycling", title: "Cycling the Forest", order: 10,
+      link: "https://www.pedalabikeaway.co.uk",
+      desc: "Miles of family trails and mountain bike routes through the Forest of Dean, with bikes and e-bikes available to hire." },
+    { slug: "tintern-abbey", title: "Tintern Abbey", order: 11,
+      link: "https://cadw.gov.wales/visit/places-to-visit/tintern-abbey",
+      desc: "The romantic ruins of a Cistercian abbey standing beside the Wye, a short and very scenic drive down the valley." },
+    { slug: "hereford-cathedral", title: "Hereford Cathedral", order: 12,
+      link: "https://www.herefordcathedral.org",
+      desc: "Home to the Mappa Mundi and the Chained Library, two of the great treasures of medieval England. About half an hour north." },
+  ];
+  for (const e of explore) {
+    await prisma.exploreItem.upsert({
+      where: { slug: e.slug },
+      update: {},
+      create: {
+        slug: e.slug, title: e.title, description: e.desc,
+        linkUrl: e.link, buttonLabel: "View", order: e.order, image: "", published: true,
+      },
+    });
+  }
+
+  console.log("✅ Seeded: admin, settings,", rooms.length, "rooms,", pages.length, "pages,", explore.length, "explore cards");
   console.log("   Admin login:", ADMIN_EMAIL, "/", ADMIN_PASSWORD);
 }
 
