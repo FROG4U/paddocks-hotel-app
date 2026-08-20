@@ -16,6 +16,7 @@ export default async function Dashboard() {
     { href: "/admin/pages", title: "Pages", desc: `${pages} pages - edit text, headings & photos`, emoji: "📄" },
     { href: "/admin/rooms", title: "Rooms & Prices", desc: `${rooms.length} rooms - details, photos & prices`, emoji: "🛏️" },
     { href: "/admin/explore", title: "Explore", desc: `${explore} cards - places to visit nearby`, emoji: "🗺️" },
+    { href: "/admin/seo", title: "SEO", desc: "How Google sees the site, with an AI writer", emoji: "🔍" },
     { href: "/admin/settings", title: "Contact & Settings", desc: "Address, phone, hours, social, branding", emoji: "⚙️" },
   ];
 

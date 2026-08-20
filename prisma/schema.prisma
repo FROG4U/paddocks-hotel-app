@@ -132,3 +132,21 @@ model ExploreItem {
 
   updatedAt DateTime @updatedAt
 }
+
+// ── AI SEO drafts ──
+// A suggestion from the AI assistant, held until the owner applies or
+// discards it. One draft per page or room.
+model SeoDraft {
+  id           String   @id @default(cuid())
+  targetType   String   // "page" | "room"
+  targetId     String
+  targetName   String
+  metaTitle    String   @default("")
+  metaDescription String @default("")
+  keywords     String   @default("")
+  bodyText     String   @default("")
+  notes        String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@unique([targetType, targetId])
+}

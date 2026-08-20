@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "./prisma";
 import { getSession, verifyLogin, createSession, destroySession } from "./auth";
 import { saveUploadedImage } from "./upload";
+import { parseSections } from "./data";
+import { suggestSeo } from "./ai";
 
 async function requireAuth() {
   const s = await getSession();
@@ -231,4 +233,110 @@ export async function deleteExploreAction(fd: FormData) {
   if (id) await prisma.exploreItem.delete({ where: { id } });
   revalidatePath("/", "layout");
   redirect("/admin/explore?deleted=1");
+}
+
+// ── AI SEO assistant ──
+export async function generateSeoAction(fd: FormData) {
+  await requireAuth();
+  const targetType = str(fd, "targetType");
+  const targetId = str(fd, "targetId");
+  if (targetType !== "page" && targetType !== "room") redirect("/admin/seo");
+
+  const s = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  if (!s) redirect("/admin/seo");
+
+  let name = "", url = "", title = "", desc = "", keywords = "", body = "";
+  if (targetType === "page") {
+    const page = await prisma.page.findUnique({ where: { id: targetId } });
+    if (!page) redirect("/admin/seo");
+    name = page.title;
+    url = page.slug === "home" ? "/" : `/${page.slug}`;
+    title = page.metaTitle; desc = page.metaDescription; keywords = page.keywords;
+    body = [page.heroTitle, page.heroSubtitle,
+      ...parseSections(page.sectionsJson).map((x) => `${x.heading ?? ""}\n${x.body ?? ""}`)]
+      .filter(Boolean).join("\n\n");
+  } else {
+    const room = await prisma.room.findUnique({ where: { id: targetId } });
+    if (!room) redirect("/admin/seo");
+    name = room.name;
+    url = `/rooms/${room.slug}`;
+    title = room.metaTitle; desc = room.metaDescription; keywords = room.keywords;
+    body = [room.shortDesc, room.description].filter(Boolean).join("\n\n");
+  }
+
+  try {
+    const out = await suggestSeo({
+      hotel: {
+        name: s.siteName, addressLine1: s.addressLine1, addressLine2: s.addressLine2,
+        town: s.town, postcode: s.postcode, phone: s.phone, email: s.email,
+        keywords: s.metaKeywords,
+      },
+      pageKind: targetType,
+      pageName: name,
+      url,
+      currentTitle: title,
+      currentDescription: desc,
+      currentKeywords: keywords,
+      currentBody: body,
+    });
+
+    await prisma.seoDraft.upsert({
+      where: { targetType_targetId: { targetType, targetId } },
+      update: { ...out, targetName: name },
+      create: { targetType, targetId, targetName: name, ...out },
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown error";
+    redirect(`/admin/seo?error=${encodeURIComponent(message)}`);
+  }
+
+  redirect(`/admin/seo?generated=${encodeURIComponent(name)}#draft-${targetId}`);
+}
+
+export async function applySeoDraftAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const withBody = bool(fd, "applyBody");
+  const draft = await prisma.seoDraft.findUnique({ where: { id } });
+  if (!draft) redirect("/admin/seo");
+
+  const seo = {
+    metaTitle: str(fd, "metaTitle") || draft.metaTitle,
+    metaDescription: str(fd, "metaDescription") || draft.metaDescription,
+    keywords: str(fd, "keywords") || draft.keywords,
+  };
+  const body = str(fd, "bodyText") || draft.bodyText;
+
+  if (draft.targetType === "page") {
+    const page = await prisma.page.findUnique({ where: { id: draft.targetId } });
+    if (page) {
+      let sectionsJson = page.sectionsJson;
+      if (withBody && body) {
+        const sections = parseSections(page.sectionsJson);
+        if (sections.length) sections[0] = { ...sections[0], body };
+        else sections.push({ heading: "", body, image: "", imageSide: "right" });
+        sectionsJson = JSON.stringify(sections);
+      }
+      await prisma.page.update({ where: { id: page.id }, data: { ...seo, sectionsJson } });
+    }
+  } else {
+    const room = await prisma.room.findUnique({ where: { id: draft.targetId } });
+    if (room) {
+      await prisma.room.update({
+        where: { id: room.id },
+        data: { ...seo, ...(withBody && body ? { description: body } : {}) },
+      });
+    }
+  }
+
+  await prisma.seoDraft.delete({ where: { id } });
+  revalidatePath("/", "layout");
+  redirect("/admin/seo?applied=1");
+}
+
+export async function discardSeoDraftAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  if (id) await prisma.seoDraft.delete({ where: { id } }).catch(() => {});
+  redirect("/admin/seo");
 }
