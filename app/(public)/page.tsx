@@ -40,7 +40,7 @@ const GLANCE = [
   {
     icon: "/icons/gold-location.png",
     title: "Location",
-    text: "10 mins from Monmouth, 15 mins from Ross-on-Wye and 40 mins from Gloucester, with the River Wye and the Forest of Dean on the doorstep.",
+    text: "15 mins from M50 Junction 4, so an easy run down from the Midlands. Monmouth is 10 mins, Ross-on-Wye 15 mins and Gloucester 40 mins.",
   },
   {
     icon: "/icons/gold-parking.png",
