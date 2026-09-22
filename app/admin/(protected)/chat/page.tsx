@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 function when(d: Date) {
   return d.toLocaleString("en-GB", {
-    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/London", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   });
 }
 

@@ -114,6 +114,13 @@ model Room {
   price       String  @default("")
   showPrice   Boolean @default(true)
 
+  // Online booking
+  bookable    Boolean @default(true)
+  basePrice   Int     @default(0)   // pence per night, before any date discount
+  maxGuests   Int     @default(2)
+  units       RoomUnit[]
+  bookings    Booking[]
+
   metaTitle       String @default("")
   metaDescription String @default("")
   keywords        String @default("")
@@ -193,4 +200,135 @@ model ChatMessage {
   conversation ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId])
+}
+
+// ══════════════════════════ ONLINE BOOKING ══════════════════════════
+// All dates are stored as "YYYY-MM-DD" strings in UK local time, so a night
+// is never shifted by a timezone. A stay covers the nights from checkIn up
+// to (not including) checkOut. Money is in pence.
+
+// One physical room. The number of units of a room type is how many can be
+// sold on any night. Each unit has its own calendar feed for sync.
+model RoomUnit {
+  id            String  @id @default(cuid())
+  roomId        String
+  name          String              // e.g. "Double 3"
+  order         Int     @default(0)
+  active        Boolean @default(true)
+  icalImportUrl String  @default("") // calendar from the channel manager / OTA
+  exportToken   String  @unique @default(cuid()) // secret part of our feed URL
+  lastSyncAt    DateTime?
+  lastSyncError String  @default("")
+
+  room     Room            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+  blocks   CalendarBlock[]
+
+  @@index([roomId])
+}
+
+// A night range when a unit is unavailable for a reason other than a website
+// booking: imported from another platform's calendar, or blocked by hand.
+model CalendarBlock {
+  id        String   @id @default(cuid())
+  unitId    String
+  start     String   // first unavailable night
+  end       String   // morning it frees up (exclusive)
+  source    String   @default("manual") // "ical" | "manual"
+  uid       String   @default("")       // iCal UID, for syncing
+  summary   String   @default("")
+  createdAt DateTime @default(now())
+
+  unit RoomUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([unitId, start])
+}
+
+model Booking {
+  id          String  @id @default(cuid())
+  reference   String  @unique            // short code shown to the guest
+  roomId      String
+  unitId      String?
+  checkIn     String
+  checkOut    String
+  nights      Int
+  adults      Int     @default(2)
+  children    Int     @default(0)
+  mealPlanId  String?
+  mealPlanName String @default("Room only")
+
+  guestName   String
+  guestEmail  String
+  guestPhone  String  @default("")
+  notes       String  @default("")
+
+  roomTotal     Int   @default(0) // after date discounts
+  mealTotal     Int   @default(0)
+  promoCode     String @default("")
+  promoDiscount Int   @default(0)
+  total         Int   @default(0)
+  breakdownJson String @default("[]") // per-night prices, for the receipt
+
+  // pending = waiting for payment (holds the room until expiresAt)
+  // confirmed = paid | cancelled | expired
+  status        String   @default("pending")
+  source        String   @default("website") // "website" | "phone"
+  expiresAt     DateTime?
+  stripeSessionId String @default("")
+  stripePaymentId String @default("")
+  refundedAmount  Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  room Room      @relation(fields: [roomId], references: [id])
+  unit RoomUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@index([unitId, checkIn])
+  @@index([status])
+}
+
+// A discount (or price) that applies to nights in a date range.
+model PriceRule {
+  id        String  @id @default(cuid())
+  name      String                 // e.g. "Winter midweek"
+  roomId    String?                // null = every room type
+  start     String                 // first night it applies to
+  end       String                 // last night it applies to (inclusive)
+  weekdays  String  @default("")   // "" = every day, else e.g. "0,1,2,3,4" (Sun=0)
+  kind      String  @default("percent") // "percent" | "amount" | "price"
+  value     Int     @default(0)    // percent, or pence off, or pence per night
+  minNights Int     @default(1)
+  active    Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+
+// Board / meal packages a guest can add to a stay.
+model MealPlan {
+  id          String  @id @default(cuid())
+  name        String                 // e.g. "Dinner, Bed & Breakfast"
+  description String  @default("")
+  breakfast   Boolean @default(false)
+  lunch       Boolean @default(false)
+  dinner      Boolean @default(false)
+  pricePerPerson Int  @default(0)    // pence per person per night
+  childPrice  Int     @default(0)    // pence per child per night
+  order       Int     @default(0)
+  active      Boolean @default(true)
+}
+
+// Codes to hand out, e.g. SUMMER10.
+model PromoCode {
+  id        String  @id @default(cuid())
+  code      String  @unique          // stored upper case
+  kind      String  @default("percent") // "percent" | "amount"
+  value     Int     @default(0)
+  validFrom String  @default("")     // stay must start on or after, "" = any
+  validTo   String  @default("")     // stay must start on or before, "" = any
+  minNights Int     @default(1)
+  maxUses   Int     @default(0)      // 0 = unlimited
+  uses      Int     @default(0)
+  active    Boolean @default(true)
+  note      String  @default("")
+  createdAt DateTime @default(now())
 }
