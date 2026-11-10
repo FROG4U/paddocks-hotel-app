@@ -67,9 +67,10 @@ export default async function BookingSystemPage({ searchParams }:
             <span>
               Show the booking engine inside our own page
               <span className="block text-xs text-ink/50">
-                Guests stay on paddockshotel.com under your header and footer. If innRoad does not
-                allow this, untick it and guests get a button that opens innRoad in a new tab.
-                Use Test below to find out which.
+                Guests stay on paddockshotel.com under your header and footer. Left off for now:
+                innRoad&rsquo;s booking engine runs a Cloudflare security check that can fail inside
+                a frame, which would show guests an empty box. Tick it, save, then open the booking
+                page yourself and make sure the form really appears before leaving it on.
               </span>
             </span>
           </label>

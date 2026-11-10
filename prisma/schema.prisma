@@ -68,8 +68,11 @@ model SiteSettings {
   //   "phone"    - no online booking, point guests at the phone
   // Only one can be on at a time, so two systems never sell the same room.
   bookingMode   String  @default("innroad")
-  innRoadUrl    String  @default("")   // the innRoad booking engine address
-  innRoadEmbed  Boolean @default(true) // show it inside the site, not a new tab
+  innRoadUrl    String  @default("https://paddockshotel.client.innroad.com")
+  // Off by default: innRoad's booking engine sits behind a Cloudflare
+  // Turnstile bot check, which is more likely to fail inside a frame than
+  // on a page of its own. Turn it on only once it has been seen working.
+  innRoadEmbed  Boolean @default(false)
 
   // SEO defaults + footer
   siteUrl         String @default("https://paddockshotel.com")
