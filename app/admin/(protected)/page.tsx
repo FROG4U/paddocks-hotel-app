@@ -16,8 +16,12 @@ export default async function Dashboard() {
   ]);
 
   const cards = [
-    { href: "/admin/bookings", title: "Bookings", desc: `${upcoming} upcoming stay${upcoming === 1 ? "" : "s"}`, emoji: "🛎️" },
-    { href: "/admin/calendar", title: "Calendar", desc: "Every room at a glance, and block dates", emoji: "📅" },
+    ...(s.bookingMode === "builtin"
+      ? [
+          { href: "/admin/bookings", title: "Bookings", desc: `${upcoming} upcoming stay${upcoming === 1 ? "" : "s"}`, emoji: "🛎️" },
+          { href: "/admin/calendar", title: "Calendar", desc: "Every room at a glance, and block dates", emoji: "📅" },
+        ]
+      : [{ href: "/admin/booking-system", title: "Booking System", desc: s.bookingMode === "innroad" ? "Bookings are handled in innRoad" : "No online booking", emoji: "🛎️" }]),
     { href: "/admin/messages", title: "Messages", desc: unread > 0 ? `${unread} new enquiry${unread === 1 ? "" : " messages"} waiting` : "Enquiries from the contact form", emoji: "✉️" },
     { href: "/admin/chat", title: "Chat", desc: `${chats} conversation${chats === 1 ? "" : "s"} with the website assistant`, emoji: "💬" },
     { href: "/admin/pages", title: "Pages", desc: `${pages} pages - edit text, headings & photos`, emoji: "📄" },

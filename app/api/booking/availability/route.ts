@@ -7,6 +7,11 @@ export const dynamic = "force-dynamic";
 
 // GET /api/booking/availability?room=king-room&from=2026-10-01&to=2026-12-01
 export async function GET(req: NextRequest) {
+  const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  if (settings && settings.bookingMode !== "builtin") {
+    return NextResponse.json({ error: "Not in use" }, { status: 409 });
+  }
+
   const q = req.nextUrl.searchParams;
   const room = await prisma.room.findUnique({ where: { slug: q.get("room") || "" } });
   if (!room || !room.bookable) return NextResponse.json({ error: "Unknown room" }, { status: 404 });

@@ -62,6 +62,15 @@ model SiteSettings {
   bookCtaLabel String @default("Book a Room")
   bookCtaHref  String @default("/contact")
 
+  // How the website takes bookings.
+  //   "innroad"  - hand over to the hotel's innRoad booking engine
+  //   "builtin"  - the website's own booking engine and Stripe payments
+  //   "phone"    - no online booking, point guests at the phone
+  // Only one can be on at a time, so two systems never sell the same room.
+  bookingMode   String  @default("innroad")
+  innRoadUrl    String  @default("")   // the innRoad booking engine address
+  innRoadEmbed  Boolean @default(true) // show it inside the site, not a new tab
+
   // SEO defaults + footer
   siteUrl         String @default("https://paddockshotel.com")
   metaTitle       String @default("The Paddocks Hotel | Hotel & Restaurant, Symonds Yat West, Ross-on-Wye")

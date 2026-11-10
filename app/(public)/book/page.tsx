@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 import { stripeConfigured } from "@/lib/stripe";
+import { innRoadLink, looksLikeUrl } from "@/lib/innroad";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +20,111 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BookPage({ searchParams }:
-  { searchParams: Promise<{ room?: string; cancelled?: string }> }) {
-  const { room, cancelled } = await searchParams;
-  const [s, rooms, mealPlans] = await Promise.all([
-    getSettings(),
+  { searchParams: Promise<{ room?: string; cancelled?: string; checkIn?: string; checkOut?: string }> }) {
+  const { room, cancelled, checkIn, checkOut } = await searchParams;
+  const s = await getSettings();
+
+  const header = (
+    <section className="bg-navy text-white text-center pt-16 pb-14 px-6">
+      <p className="eyebrow">Book direct for the best price</p>
+      <h1 className="hero-title mt-3">Book a Room</h1>
+    </section>
+  );
+
+  // ── Bookings are handled by the hotel's innRoad system ──
+  if (s.bookingMode === "innroad") {
+    const url = innRoadLink(s.innRoadUrl, { checkIn, checkOut });
+    const ready = looksLikeUrl(s.innRoadUrl);
+
+    if (!ready) {
+      return (
+        <>
+          {header}
+          <section className="bg-white">
+            <div className="mx-auto max-w-2xl px-6 py-20 text-center">
+              <p className="text-lg text-ink/80">
+                To book a room please call us on{" "}
+                <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="underline text-navy">{s.phone}</a>{" "}
+                or email{" "}
+                <a href={`mailto:${s.email}`} className="underline text-navy">{s.email}</a>.
+                We will be delighted to help.
+              </p>
+            </div>
+          </section>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {header}
+        <section className="bg-white">
+          <div className="mx-auto max-w-[1240px] px-5 py-10 lg:py-14">
+            {s.innRoadEmbed ? (
+              <>
+                {/* innRoad's booking engine, shown inside the page. */}
+                <iframe
+                  src={url}
+                  title="Check availability and book a room"
+                  className="w-full rounded-lg border border-black/10 bg-cream/30"
+                  style={{ height: "min(1400px, 150vh)", minHeight: "820px" }}
+                  loading="lazy"
+                  allow="payment"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                />
+                {/* Always offered, so a guest is never stuck if the frame
+                    does not load on their device or browser. */}
+                <p className="text-center text-sm text-ink/60 mt-5">
+                  Trouble with the booking form?{" "}
+                  <a href={url} target="_blank" rel="noopener" className="underline text-navy">
+                    Open it in a new tab
+                  </a>{" "}
+                  or call us on{" "}
+                  <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="underline text-navy">{s.phone}</a>.
+                </p>
+              </>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-lg text-ink/80 mb-8 max-w-xl mx-auto">
+                  Check availability and book your room with us. You will be taken to our secure
+                  booking system, where your reservation is confirmed straight away.
+                </p>
+                <a href={url} target="_blank" rel="noopener" className="btn-brand">
+                  Check availability
+                </a>
+                <p className="text-sm text-ink/60 mt-8">
+                  Prefer to talk to someone? Call{" "}
+                  <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="underline text-navy">{s.phone}</a>.
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  // ── No online booking ──
+  if (s.bookingMode === "phone") {
+    return (
+      <>
+        {header}
+        <section className="bg-white">
+          <div className="mx-auto max-w-2xl px-6 py-20 text-center">
+            <p className="text-lg text-ink/80">
+              To book a room please call us on{" "}
+              <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="underline text-navy">{s.phone}</a>{" "}
+              or email{" "}
+              <a href={`mailto:${s.email}`} className="underline text-navy">{s.email}</a>.
+            </p>
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  // ── The website's own booking engine ──
+  const [rooms, mealPlans] = await Promise.all([
     prisma.room.findMany({
       where: { bookable: true, basePrice: { gt: 0 }, units: { some: { active: true } } },
       orderBy: { order: "asc" },
@@ -32,11 +134,7 @@ export default async function BookPage({ searchParams }:
 
   return (
     <>
-      <section className="bg-navy text-white text-center pt-16 pb-14 px-6">
-        <p className="eyebrow">Book direct for the best price</p>
-        <h1 className="hero-title mt-3">Book a Room</h1>
-      </section>
-
+      {header}
       <section className="bg-white">
         <div className="mx-auto max-w-[1240px] px-5 py-12 lg:py-16">
           <BookingWidget

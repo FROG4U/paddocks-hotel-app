@@ -29,8 +29,10 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
 
   // Rooms that can be booked online go straight to the booking page for that room.
   const units = await prisma.roomUnit.count({ where: { roomId: room.id, active: true } });
-  const online = room.bookable && room.basePrice > 0 && units > 0;
-  const bookHref = online ? `/book?room=${room.slug}` : s.bookCtaHref;
+  const builtinReady = s.bookingMode === "builtin" && room.bookable && room.basePrice > 0 && units > 0;
+  const viaInnRoad = s.bookingMode === "innroad" && !!s.innRoadUrl;
+  const online = builtinReady || viaInnRoad;
+  const bookHref = online ? (builtinReady ? `/book?room=${room.slug}` : "/book") : s.bookCtaHref;
   const bookLabel = online ? "Check availability" : s.bookCtaLabel;
 
   return (
@@ -55,7 +57,7 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
               .filter(Boolean)
               .map((p, i) => <p key={i}>{p}</p>)}
           </div>
-          {online && (
+          {builtinReady && (
             <p className="mt-8 text-ink/70">From <span className="font-display text-2xl text-navy">{money(room.basePrice)}</span> a night</p>
           )}
           <a href={bookHref}

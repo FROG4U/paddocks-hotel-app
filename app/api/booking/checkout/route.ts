@@ -24,6 +24,15 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
 
   const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+
+  // The hotel's own system holds the diary in any mode but "builtin", so
+  // this website must not create a booking of its own.
+  if (settings && settings.bookingMode !== "builtin") {
+    return NextResponse.json({
+      error: `Please book through our booking system, or call us on ${settings.phone}.`,
+    }, { status: 409 });
+  }
+
   if (!stripeConfigured()) {
     return NextResponse.json({
       error: `Online payment is not switched on yet. Please call us on ${settings?.phone || "the hotel"} to book.`,

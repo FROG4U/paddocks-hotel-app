@@ -8,6 +8,11 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Bad request" }, { status: 400 }); }
 
+  const settings = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  if (settings && settings.bookingMode !== "builtin") {
+    return NextResponse.json({ ok: false, error: "Online booking is handled by our booking system." }, { status: 409 });
+  }
+
   const room = await prisma.room.findUnique({ where: { slug: String(body.room || "") } });
   if (!room) return NextResponse.json({ ok: false, error: "Please choose a room." });
 

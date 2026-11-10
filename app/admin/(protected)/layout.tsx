@@ -6,17 +6,18 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const NAV: { heading?: string; href?: string; label?: string }[] = [
+const NAV: { heading?: string; href?: string; label?: string; builtinOnly?: boolean }[] = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/messages", label: "Messages" },
   { href: "/admin/chat", label: "Chat" },
   { heading: "Bookings" },
-  { href: "/admin/bookings", label: "Bookings" },
-  { href: "/admin/calendar", label: "Calendar" },
-  { href: "/admin/rates", label: "Rates & Discounts" },
-  { href: "/admin/meal-plans", label: "Meal Plans & Offers" },
-  { href: "/admin/promo-codes", label: "Discount Codes" },
-  { href: "/admin/channel-sync", label: "Channel Sync" },
+  { href: "/admin/booking-system", label: "Booking System" },
+  { href: "/admin/bookings", label: "Bookings", builtinOnly: true },
+  { href: "/admin/calendar", label: "Calendar", builtinOnly: true },
+  { href: "/admin/rates", label: "Rates & Discounts", builtinOnly: true },
+  { href: "/admin/meal-plans", label: "Meal Plans & Offers", builtinOnly: true },
+  { href: "/admin/promo-codes", label: "Discount Codes", builtinOnly: true },
+  { href: "/admin/channel-sync", label: "Channel Sync", builtinOnly: true },
   { heading: "Website" },
   { href: "/admin/pages", label: "Pages" },
   { href: "/admin/rooms", label: "Room Pages" },
@@ -29,10 +30,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await getSession();
   if (!session) redirect("/admin/login");
 
-  const [unread, newBookings] = await Promise.all([
+  const [unread, newBookings, settings] = await Promise.all([
     prisma.message.count({ where: { read: false, archived: false } }),
     prisma.booking.count({ where: { status: "confirmed", createdAt: { gt: new Date(Date.now() - 48 * 3600000) } } }),
+    prisma.siteSettings.findUnique({ where: { id: 1 }, select: { bookingMode: true } }),
   ]);
+  const builtin = (settings?.bookingMode ?? "builtin") === "builtin";
+  const nav = NAV.filter((n) => !n.builtinOnly || builtin);
   const badges: Record<string, number> = { "/admin/messages": unread, "/admin/bookings": newBookings };
 
   return (
@@ -43,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <p className="text-xs text-white/60">Admin panel</p>
         </div>
         <nav className="p-3 space-y-1">
-          {NAV.map((n, i) => n.heading ? (
+          {nav.map((n, i) => n.heading ? (
             <p key={`h${i}`} className="px-3 pt-4 pb-1 text-[10px] uppercase tracking-wider text-white/40">{n.heading}</p>
           ) : (
             <Link key={n.href} href={n.href!}

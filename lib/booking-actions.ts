@@ -323,3 +323,24 @@ export async function cancelBookingAction(fd: FormData) {
   revalidatePath("/", "layout");
   back(`/admin/bookings/${id}`, { cancelled: "1" });
 }
+
+// ── Which booking system the website uses ─────────────────────────────
+export async function saveBookingModeAction(fd: FormData) {
+  await requireAuth();
+  const mode = ["innroad", "builtin", "phone"].includes(str(fd, "bookingMode"))
+    ? str(fd, "bookingMode") : "phone";
+  // Accept "paddocks.innroad.com" as well as a full address.
+  let url = str(fd, "innRoadUrl");
+  if (url && !/^https?:\/\//i.test(url)) url = `https://${url.replace(/^\/+/, "")}`;
+
+  if (mode === "innroad" && url && !/^https?:\/\/[^\s/]+\.[^\s/]+/i.test(url)) {
+    back("/admin/booking-system", { error: "That does not look like a web address. Paste the whole booking engine link from innRoad." });
+  }
+
+  await prisma.siteSettings.update({
+    where: { id: 1 },
+    data: { bookingMode: mode, innRoadUrl: url, innRoadEmbed: on(fd, "innRoadEmbed") },
+  });
+  revalidatePath("/", "layout");
+  back("/admin/booking-system", str(fd, "test") === "1" ? { saved: "1", tested: "1" } : { saved: "1" });
+}
