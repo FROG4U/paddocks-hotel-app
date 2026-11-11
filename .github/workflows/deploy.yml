@@ -1,0 +1,48 @@
+# Publishes the website whenever something is pushed to main.
+#
+# It calls an address on the site, which fetches the new code, builds it
+# and restarts. The site is only restarted if the build succeeds, so a
+# broken push cannot take it down.
+#
+# Needs one repository secret, DEPLOY_KEY, matching the DEPLOY_KEY
+# environment variable set in Plesk.
+name: Publish to the website
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the website to update itself
+        run: |
+          code=$(curl -s -o /tmp/out.json -w "%{http_code}" -X POST \
+            -H "x-deploy-key: ${{ secrets.DEPLOY_KEY }}" \
+            "https://paddockshotel.com/api/deploy")
+          cat /tmp/out.json; echo
+          if [ "$code" != "200" ]; then
+            echo "The website refused the update (HTTP $code)."
+            exit 1
+          fi
+
+      - name: Wait for it to finish, then report
+        run: |
+          for i in $(seq 1 40); do
+            sleep 15
+            curl -s "https://paddockshotel.com/api/deploy?key=${{ secrets.DEPLOY_KEY }}" -o /tmp/state.json
+            running=$(python3 -c "import json;print(json.load(open('/tmp/state.json'))['running'])" 2>/dev/null || echo True)
+            if [ "$running" = "False" ]; then
+              python3 -c "import json;print(json.load(open('/tmp/state.json'))['log'])"
+              python3 -c "
+import json,sys
+log=json.load(open('/tmp/state.json'))['log']
+bad = 'FAILED' in log or 'TIMED OUT' in log or 'has NOT been' in log
+sys.exit(1 if bad else 0)"
+              exit $?
+            fi
+          done
+          echo "Still going after 10 minutes. Check the Update page in the admin."
+          exit 1

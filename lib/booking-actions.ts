@@ -513,3 +513,11 @@ export async function deleteRoomImageAction(fd: FormData) {
   revalidatePath("/", "layout");
   back(`/admin/rooms/${img?.roomId ?? ""}`, { saved: "1" });
 }
+
+// ── Publishing the latest version of the site ─────────────────────────
+export async function startDeployAction() {
+  await requireAuth();
+  const { startDeploy } = await import("./deploy");
+  const result = await startDeploy("the admin panel");
+  back("/admin/update", result.started ? { started: "1" } : { error: result.reason ?? "Could not start the update." });
+}

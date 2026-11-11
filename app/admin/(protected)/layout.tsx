@@ -28,6 +28,7 @@ const NAV: { heading?: string; href?: string; label?: string; builtinOnly?: bool
   { href: "/admin/explore", label: "Explore" },
   { href: "/admin/seo", label: "SEO" },
   { href: "/admin/settings", label: "Contact & Settings" },
+  { href: "/admin/update", label: "Update Website" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
