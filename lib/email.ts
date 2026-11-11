@@ -6,20 +6,33 @@ import { formatDate, money } from "./booking";
 /**
  * Sending email to guests.
  *
- * The mailbox details come from environment variables set in Plesk, never
- * the database, so the password is not in the git repository:
+ * We send through Resend. It goes out over an ordinary web request, so
+ * nothing depends on the server's mail ports being open, and because the
+ * domain is signed properly, far less of it lands in a guest's spam folder
+ * than it would from a shared hotel mailbox.
  *
- *   SMTP_HOST      e.g. smtp.ionos.co.uk
- *   SMTP_PORT      465 for SSL, or 587
- *   SMTP_USER      the full email address, e.g. reception@paddockshotel.com
- *   SMTP_PASSWORD  that mailbox's password
+ * The key is an environment variable set in Plesk, never the database, so it
+ * never reaches the git repository:
  *
- * With nothing set, the site simply does not send email. Everything else
- * carries on working and the admin screens say so.
+ *   RESEND_API_KEY   the re_... key from resend.com
+ *
+ * An ordinary mailbox still works instead if it is ever wanted, using
+ * SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD.
+ *
+ * With neither set, the site simply does not send email. Everything else
+ * carries on working and the admin screens say so plainly.
  */
 
+export type EmailProvider = "resend" | "smtp" | null;
+
+export function emailProvider(): EmailProvider {
+  if (process.env.RESEND_API_KEY) return "resend";
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) return "smtp";
+  return null;
+}
+
 export function emailConfigured() {
-  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+  return emailProvider() !== null;
 }
 
 function transport() {
@@ -32,16 +45,73 @@ function transport() {
   });
 }
 
-/** Check the mailbox details work, for the admin screen. */
+async function resend(path: string, init?: RequestInit) {
+  return fetch(`https://api.resend.com${path}`, {
+    ...init,
+    cache: "no-store",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+}
+
+/** The domain part of whatever address guests will see us sending from. */
+function domainOf(addr: string) {
+  return (addr.split("@")[1] || "").trim().toLowerCase();
+}
+
+/**
+ * Check email is actually working, for the admin screen. With Resend this is
+ * worth more than a connection test: it also says whether the domain has been
+ * verified, which is the thing that quietly stops email going out.
+ */
 export async function verifyEmail(): Promise<{ ok: boolean; message: string }> {
-  if (!emailConfigured()) {
-    return { ok: false, message: "No mailbox is set up yet, so no email is being sent." };
+  const provider = emailProvider();
+  if (!provider) {
+    return { ok: false, message: "No email account is set up yet, so no email is being sent." };
   }
+
+  if (provider === "smtp") {
+    try {
+      await transport().verify();
+      return { ok: true, message: `Connected to ${process.env.SMTP_HOST} as ${process.env.SMTP_USER}. Email is working.` };
+    } catch (e) {
+      return { ok: false, message: `The mailbox refused the connection: ${e instanceof Error ? e.message : "unknown error"}` };
+    }
+  }
+
   try {
-    await transport().verify();
-    return { ok: true, message: `Connected to ${process.env.SMTP_HOST} as ${process.env.SMTP_USER}. Email is working.` };
+    const res = await resend("/domains");
+    if (res.status === 401 || res.status === 403) {
+      return { ok: false, message: "Resend did not recognise that key. Check it was pasted in full, and that the app has been restarted since it was added." };
+    }
+    if (!res.ok) {
+      return { ok: false, message: `Resend answered with an error (${res.status}). Worth trying again in a moment.` };
+    }
+    const body = await res.json() as { data?: { name: string; status: string }[] };
+    const domains = body.data || [];
+    const s = await prisma.siteSettings.findUnique({ where: { id: 1 }, select: { emailFromAddr: true, email: true } });
+    const sending = domainOf(s?.emailFromAddr || s?.email || "");
+    if (!sending) return { ok: true, message: "Resend is connected." };
+
+    const match = domains.find((d) => d.name.toLowerCase() === sending);
+    if (!match) {
+      return {
+        ok: false,
+        message: `Resend is connected, but ${sending} has not been added to it, so anything sent from that address will be refused. Add the domain in Resend and put the DNS records it gives you into IONOS.`,
+      };
+    }
+    if (match.status !== "verified") {
+      return {
+        ok: false,
+        message: `Resend is connected and ${sending} has been added, but it is still showing as "${match.status}". The DNS records need to go into IONOS, then press Verify in Resend. It can take up to an hour to come through.`,
+      };
+    }
+    return { ok: true, message: `Resend is connected and ${sending} is verified. Email is working.` };
   } catch (e) {
-    return { ok: false, message: `The mailbox refused the connection: ${e instanceof Error ? e.message : "unknown error"}` };
+    return { ok: false, message: `Could not reach Resend: ${e instanceof Error ? e.message : "unknown error"}` };
   }
 }
 
@@ -84,16 +154,37 @@ export async function sendEmail(args: SendArgs): Promise<boolean> {
       siteName: s.siteName, phone: s.phone, email: s.email,
       navy: s.navyColor || "#0a416c", gold: s.goldColor || "#ba9667",
     };
-    const from = `"${s.emailFromName || s.siteName}" <${s.emailFromAddr || process.env.SMTP_USER}>`;
+    const addr = s.emailFromAddr || process.env.SMTP_USER || s.email;
+    const from = `"${s.emailFromName || s.siteName}" <${addr}>`;
+    const text = `${args.heading}\n\n${args.body.join("\n\n").replace(/<[^>]+>/g, "")}` +
+      (args.button ? `\n\n${args.button.label}: ${args.button.url}` : "") +
+      `\n\n${s.siteName}\n${s.phone}\n${s.email}`;
+
+    if (emailProvider() === "resend") {
+      const res = await resend("/emails", {
+        method: "POST",
+        body: JSON.stringify({
+          from,
+          to: [args.to],
+          reply_to: s.email || undefined,
+          subject: args.subject,
+          text,
+          html: html(brand, args),
+        }),
+      });
+      if (!res.ok) {
+        console.error("Resend refused the email:", res.status, (await res.text()).slice(0, 500));
+        return false;
+      }
+      return true;
+    }
 
     await transport().sendMail({
       from,
       to: args.to,
       replyTo: s.email || undefined,
       subject: args.subject,
-      text: `${args.heading}\n\n${args.body.join("\n\n").replace(/<[^>]+>/g, "")}` +
-        (args.button ? `\n\n${args.button.label}: ${args.button.url}` : "") +
-        `\n\n${s.siteName}\n${s.phone}\n${s.email}`,
+      text,
       html: html(brand, args),
     });
     return true;

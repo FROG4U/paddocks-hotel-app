@@ -27,24 +27,37 @@ export default async function ReviewEmailsPage({ searchParams }:
       <SavedBanner show={tested === "1"} text={`Test email sent to ${s.email}. Have a look in that inbox.`} />
       <ErrorBanner message={error} />
 
-      <Card title="Mailbox">
+      <Card title="Sending">
         <p className={`text-sm rounded-md px-4 py-3 ${check?.ok ? "bg-green-600 text-white" : "bg-amber-100 text-amber-900"}`}>
-          {check ? check.message : "No mailbox is set up, so the website is not sending any email at all. Guests get no confirmation and no review request."}
+          {check ? check.message : "Email is not set up yet, so the website is not sending anything at all. Guests get no confirmation and no review request."}
         </p>
         {!check?.ok && (
           <>
             <p className="text-sm text-ink/70">
-              Add these in Plesk under the domain, then Node.js, then Custom environment variables,
-              and restart the app. Use your own hotel mailbox, the same details as Outlook or your phone:
+              The website sends through <strong>Resend</strong>. It is free for the amount of email
+              a hotel this size sends, and it signs the emails properly so they arrive in the inbox
+              rather than the spam folder. Three steps:
             </p>
-            <ul className="text-sm text-ink/70 list-disc pl-5 space-y-1">
-              <li><code className="bg-cream px-1 rounded">SMTP_HOST</code> e.g. smtp.ionos.co.uk</li>
-              <li><code className="bg-cream px-1 rounded">SMTP_PORT</code> 465</li>
-              <li><code className="bg-cream px-1 rounded">SMTP_USER</code> {s.email || "reception@paddockshotel.com"}</li>
-              <li><code className="bg-cream px-1 rounded">SMTP_PASSWORD</code> that mailbox&rsquo;s password</li>
-            </ul>
+            <ol className="text-sm text-ink/70 list-decimal pl-5 space-y-2">
+              <li>
+                Make an account at <code className="bg-cream px-1 rounded">resend.com</code>, add{" "}
+                <strong>paddockshotel.com</strong> as a domain, and copy the DNS records it shows
+                you into IONOS. Press Verify in Resend once they are in.
+              </li>
+              <li>
+                In Resend, under API Keys, create a key and copy it. It starts with{" "}
+                <code className="bg-cream px-1 rounded">re_</code> and is only shown once.
+              </li>
+              <li>
+                In Plesk, under the domain, Node.js, Custom environment variables, add{" "}
+                <code className="bg-cream px-1 rounded">RESEND_API_KEY</code> with that key as its
+                value, then restart the app and refresh this page.
+              </li>
+            </ol>
             <p className="text-xs text-ink/50">
-              The password lives in Plesk only. It is never stored in the website or its code.
+              The key lives in Plesk only. It is never stored in the website or its code. Guests
+              still reply to {s.email || "the hotel"} as normal, and those replies go to that
+              mailbox, not to Resend.
             </p>
           </>
         )}
