@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { HOLD_MINUTES, formatDate, newReference, quote } from "@/lib/booking";
 import { syncStale } from "@/lib/ical";
 import { getStripe, stripeConfigured } from "@/lib/stripe";
+import { notifyHotel, sendBookingReceived } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,10 @@ export async function POST(req: NextRequest) {
   if (!guestName) return NextResponse.json({ error: "Please enter your name." });
   if (!EMAIL_RE.test(guestEmail)) return NextResponse.json({ error: "Please enter a valid email address." });
 
+  if (settings && !settings.bookingOpen) {
+    return NextResponse.json({ error: settings.bookingClosedNote });
+  }
+
   const room = await prisma.room.findUnique({ where: { slug: String(body.room || "") } });
   if (!room) return NextResponse.json({ error: "Please choose a room." });
 
@@ -69,6 +74,12 @@ export async function POST(req: NextRequest) {
   const now = new Date();
   // If two payments collide the database refuses one of them outright;
   // treat that the same as the room having just gone.
+  const marketingOptIn = body.marketingOptIn === true;
+  const acceptedTerms = body.acceptedTerms === true;
+  if (!acceptedTerms) {
+    return NextResponse.json({ error: "Please tick the box to accept the booking terms." });
+  }
+
   const booking = await prisma.$transaction(async (tx) => {
     const units = await tx.roomUnit.findMany({
       where: { roomId: room.id, active: true },
@@ -111,6 +122,8 @@ export async function POST(req: NextRequest) {
         breakdownJson: JSON.stringify(q.breakdown),
         status: "pending",
         source: "website",
+        marketingOptIn,
+        termsAcceptedAt: new Date(),
         expiresAt: new Date(now.getTime() + HOLD_MINUTES * 60000),
       },
     });
@@ -121,14 +134,26 @@ export async function POST(req: NextRequest) {
 
   const origin = siteOrigin(req, settings?.siteUrl || "");
 
-  // A 100% discount code: nothing to pay, confirm straight away.
+  // A 100% discount code: nothing to pay, so there is no card to hold. It
+  // still waits for approval when the hotel approves every booking.
   if (booking.total <= 0) {
+    const freeStatus = settings?.requireApproval ? "awaiting_approval" : "confirmed";
     await prisma.$transaction([
-      prisma.booking.update({ where: { id: booking.id }, data: { status: "confirmed", expiresAt: null } }),
+      prisma.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: freeStatus,
+          expiresAt: null,
+          ...(freeStatus === "confirmed" ? { approvedAt: new Date() } : {}),
+        },
+      }),
       ...(booking.promoCode
         ? [prisma.promoCode.updateMany({ where: { code: booking.promoCode }, data: { uses: { increment: 1 } } })]
         : []),
     ]);
+    // Free stay: nothing to authorise, so tell everyone straight away.
+    sendBookingReceived(booking.id).catch(() => {});
+    notifyHotel(booking.id).catch(() => {});
     return NextResponse.json({ url: `${origin}/book/confirmed?ref=${booking.reference}` });
   }
 
@@ -153,6 +178,9 @@ export async function POST(req: NextRequest) {
       payment_intent_data: {
         description: `The Paddocks Hotel booking ${booking.reference}`,
         metadata: { bookingId: booking.id, reference: booking.reference },
+        // When the hotel approves each booking, only hold the money now and
+        // take it on approval. Stripe keeps an authorisation for 7 days.
+        ...(settings?.requireApproval ? { capture_method: "manual" as const } : {}),
       },
       // Stripe needs at least 30 minutes; the room is held a little longer.
       expires_at: Math.floor(Date.now() / 1000) + 31 * 60,

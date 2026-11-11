@@ -2,13 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatDate, money } from "@/lib/booking";
-import { cancelBookingAction } from "@/lib/booking-actions";
+import { approveBookingAction, cancelBookingAction, declineBookingAction, sendReviewNowAction } from "@/lib/booking-actions";
 import { Card, ErrorBanner, SavedBanner } from "@/components/admin/fields";
 
 export const dynamic = "force-dynamic";
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   confirmed: { label: "Confirmed", cls: "bg-green-100 text-green-800" },
+  awaiting_approval: { label: "Waiting for your approval", cls: "bg-gold/30 text-navy" },
+  declined: { label: "Declined", cls: "bg-red-100 text-red-800" },
   pending: { label: "Waiting for payment", cls: "bg-amber-100 text-amber-900" },
   expired: { label: "Payment not completed", cls: "bg-black/5 text-ink/60" },
   cancelled: { label: "Cancelled", cls: "bg-red-100 text-red-800" },
@@ -16,9 +18,9 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 
 export default async function BookingDetail({ params, searchParams }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; cancelled?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; cancelled?: string; error?: string; approved?: string; declined?: string; reviewsent?: string }>;
 }) {
-  const [{ id }, { saved, cancelled, error }] = await Promise.all([params, searchParams]);
+  const [{ id }, { saved, cancelled, error, approved, declined, reviewsent }] = await Promise.all([params, searchParams]);
   const b = await prisma.booking.findUnique({ where: { id }, include: { room: true, unit: true } });
   if (!b) notFound();
 
@@ -35,6 +37,9 @@ export default async function BookingDetail({ params, searchParams }: {
         <span className={`text-xs font-semibold rounded px-2 py-1 ${status.cls}`}>{status.label}</span>
       </div>
       <SavedBanner show={saved === "1"} text="Booking saved." />
+      <SavedBanner show={approved === "1"} text="Approved. The card has been charged and the guest has been emailed." />
+      <SavedBanner show={declined === "1"} text="Declined. The hold on their card has been released and the guest has been told." />
+      <SavedBanner show={reviewsent === "1"} text="Review request sent." />
       <SavedBanner show={cancelled === "1"} text={b.refundedAmount ? `Cancelled and ${money(b.refundedAmount)} refunded.` : "Booking cancelled."} />
       <ErrorBanner message={error} />
 
@@ -48,6 +53,12 @@ export default async function BookingDetail({ params, searchParams }: {
           <Item k="Meals" v={b.mealPlanName} />
           <Item k="Email" v={b.guestEmail ? <a href={`mailto:${b.guestEmail}`} className="underline">{b.guestEmail}</a> : "-"} />
           <Item k="Phone" v={b.guestPhone ? <a href={`tel:${b.guestPhone.replace(/\s/g, "")}`} className="underline">{b.guestPhone}</a> : "-"} />
+        </dl>
+        <dl className="grid sm:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+          <Item k="Accepted terms" v={b.termsAcceptedAt
+            ? b.termsAcceptedAt.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/London" })
+            : "Not recorded"} />
+          <Item k="Marketing emails" v={b.marketingOptIn ? "Opted in" : "Not opted in"} />
         </dl>
         {b.notes && (
           <div className="text-sm bg-cream/60 rounded-md p-3">
@@ -76,6 +87,35 @@ export default async function BookingDetail({ params, searchParams }: {
           )}
         </div>
       </Card>
+
+      {b.status === "awaiting_approval" && (
+        <Card title="This booking needs your decision">
+          <p className="text-sm text-ink/70 -mt-2">
+            {b.total > 0
+              ? `${money(b.total)} is held on the guest's card but has not been taken. Approving charges it and emails their confirmation. Declining releases the hold and sends an apology.`
+              : "There is nothing to charge for this booking. Approving confirms it and emails the guest. Declining sends them an apology."}
+          </p>
+          <div className="flex flex-wrap gap-3 items-start">
+            <form action={approveBookingAction}>
+              <input type="hidden" name="id" value={b.id} />
+              <button className="bg-green-700 text-white font-semibold rounded-md px-6 py-3 hover:brightness-95">
+                {b.total > 0 ? `Approve and charge ${money(b.total)}` : "Approve this booking"}
+              </button>
+            </form>
+          </div>
+          <form action={declineBookingAction} className="border-t border-black/10 pt-4 space-y-3">
+            <input type="hidden" name="id" value={b.id} />
+            <label className="block text-sm max-w-md">
+              <span className="block text-ink/60 mb-1">Reason (optional, included in their email)</span>
+              <input name="reason" placeholder="e.g. That room has just gone for those dates"
+                className="border border-black/15 rounded-md px-3 py-2 w-full" />
+            </label>
+            <button className="border border-accent text-accent font-semibold rounded-md px-5 py-2.5 hover:bg-accent hover:text-white">
+              {b.total > 0 ? "Decline and release the hold" : "Decline this booking"}
+            </button>
+          </form>
+        </Card>
+      )}
 
       {b.status === "confirmed" && (
         <form action={cancelBookingAction}>

@@ -175,6 +175,8 @@ export async function saveRoomAction(fd: FormData) {
     metaTitle: str(fd, "metaTitle"),
     metaDescription: str(fd, "metaDescription"),
     keywords: str(fd, "keywords"),
+    bedType: str(fd, "bedType"),
+    termsText: str(fd, "termsText"),
   };
 
   if (id && id !== "new") {

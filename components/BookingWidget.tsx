@@ -5,7 +5,7 @@ import Image from "next/image";
 
 type Room = {
   slug: string; name: string; image: string; maxGuests: number;
-  basePrice: number; shortDesc: string;
+  basePrice: number; shortDesc: string; bedType: string;
 };
 type MealPlan = {
   id: string; name: string; description: string;
@@ -38,9 +38,16 @@ const addMonths = (first: string, n: number) => {
 const nice = (d: string, opts: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short" }) =>
   new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
 
-export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, paymentsOn, cancelled }: {
-  rooms: Room[]; mealPlans: MealPlan[]; initialRoom: string; phone: string;
+type Offer = { id: string; name: string; badge: string; description: string; image: string; roomSlug: string | null };
+
+export default function BookingWidget({
+  rooms, mealPlans, offers, initialRoom, phone, paymentsOn, cancelled,
+  checkInTime, checkOutTime, terms, roomTerms, marketingText, requireApproval,
+}: {
+  rooms: Room[]; mealPlans: MealPlan[]; offers: Offer[]; initialRoom: string; phone: string;
   paymentsOn: boolean; cancelled: boolean;
+  checkInTime: string; checkOutTime: string;
+  terms: string; roomTerms: Record<string, string>; marketingText: string; requireApproval: boolean;
 }) {
   const today = useMemo(() => todayUK(), []);
   const [roomSlug, setRoomSlug] = useState(initialRoom || rooms[0]?.slug || "");
@@ -64,6 +71,9 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
   const [quoting, setQuoting] = useState(false);
 
   const [guest, setGuest] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const [paying, setPaying] = useState(false);
   const [error, setError] = useState("");
 
@@ -167,6 +177,7 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
           room: roomSlug, checkIn, checkOut, adults, children, mealPlanId,
           promoCode: q.promoCode || promo,
           guestName: guest.name, guestEmail: guest.email, guestPhone: guest.phone, notes: guest.notes,
+          acceptedTerms, marketingOptIn,
         }),
       });
       const data = await res.json();
@@ -201,6 +212,30 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
           </p>
         )}
 
+        {offers.length > 0 && (
+          <div className="mb-10">
+            <h2 className="caption-title mb-3">Our current offers</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {offers.map((o) => (
+                <button key={o.id} type="button"
+                  onClick={() => { if (o.roomSlug) pickRoom(o.roomSlug); }}
+                  className={`text-left rounded-lg overflow-hidden border border-gold/50 bg-cream/40 ${o.roomSlug ? "hover:border-gold" : "cursor-default"}`}>
+                  {o.image && (
+                    <div className="relative aspect-[16/9]">
+                      <Image src={o.image} alt={o.name} fill className="object-cover" sizes="(max-width:640px) 100vw, 320px" />
+                    </div>
+                  )}
+                  <div className="px-4 py-3">
+                    {o.badge && <span className="inline-block text-[10px] font-bold uppercase bg-gold text-navy rounded px-2 py-0.5 mb-1.5">{o.badge}</span>}
+                    <p className="font-display text-navy uppercase text-sm">{o.name}</p>
+                    {o.description && <p className="text-xs text-ink/70 mt-1 leading-relaxed">{o.description}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 1. Room */}
         <h2 className="caption-title mb-3">1. Choose your room</h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 mb-10">
@@ -215,7 +250,10 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
               </div>
               <div className="px-4 py-3">
                 <p className="font-display text-navy uppercase">{r.name}</p>
-                <p className="text-sm text-ink/60">From {money(r.basePrice)} a night · sleeps {r.maxGuests}</p>
+                <p className="text-sm text-ink/60">
+                  From {money(r.basePrice)} a night · sleeps {r.maxGuests}
+                  {r.bedType ? ` · ${r.bedType}` : ""}
+                </p>
               </div>
             </button>
           ))}
@@ -257,6 +295,9 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
           <p className="text-sm text-white/70 mt-1">
             {checkIn ? nice(checkIn) : "Arrival"} → {checkOut ? nice(checkOut) : "Departure"}
             {q?.nights ? ` · ${q.nights} night${q.nights === 1 ? "" : "s"}` : ""}
+          </p>
+          <p className="text-xs text-white/50 mt-1.5">
+            Check in from {checkInTime} · check out by {checkOutTime}
           </p>
         </div>
 
@@ -334,11 +375,34 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
               <textarea placeholder="Anything we should know? (optional)" rows={2} value={guest.notes}
                 onChange={(e) => setGuest({ ...guest, notes: e.target.value })} className={field} />
 
+              <div className="space-y-2.5 border-t border-black/10 pt-3">
+                <label className="flex items-start gap-2 text-xs text-ink/70">
+                  <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 accent-[var(--navy)] flex-none" />
+                  <span>
+                    I accept the{" "}
+                    <button type="button" onClick={() => setShowTerms(true)} className="underline text-navy">
+                      booking terms
+                    </button>.
+                  </span>
+                </label>
+                {marketingText && (
+                  <label className="flex items-start gap-2 text-xs text-ink/70">
+                    <input type="checkbox" checked={marketingOptIn} onChange={(e) => setMarketingOptIn(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-[var(--navy)] flex-none" />
+                    <span>{marketingText}</span>
+                  </label>
+                )}
+              </div>
+
               {error && <p className="text-sm text-red-700">{error}</p>}
 
               {paymentsOn ? (
-                <button type="submit" disabled={paying} className="btn-brand w-full text-center disabled:opacity-60">
-                  {paying ? "Taking you to payment..." : `Pay ${money(q.total)} securely`}
+                <button type="submit" disabled={paying || !acceptedTerms}
+                  className="btn-brand w-full text-center disabled:opacity-50">
+                  {paying ? "Taking you to payment..."
+                    : requireApproval ? `Request this stay - ${money(q.total)}`
+                    : `Pay ${money(q.total)} securely`}
                 </button>
               ) : (
                 <p className="text-sm bg-cream rounded-sm px-4 py-3 text-ink/80">
@@ -347,12 +411,44 @@ export default function BookingWidget({ rooms, mealPlans, initialRoom, phone, pa
                 </p>
               )}
               <p className="text-[11px] text-ink/50 text-center">
-                Payment is taken in full by Stripe. Your card details never touch our website.
+                {requireApproval
+                  ? "Your card is checked and held, but nothing is taken until we confirm your booking. Handled by Stripe; your card details never touch our website."
+                  : "Payment is taken in full by Stripe. Your card details never touch our website."}
               </p>
             </div>
           )}
         </form>
       </aside>
+
+      {showTerms && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={() => setShowTerms(false)}>
+          <div className="bg-white rounded-lg max-w-xl w-full max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="bg-navy text-white px-6 py-4 flex items-center justify-between sticky top-0">
+              <p className="font-display text-lg">Booking terms</p>
+              <button type="button" onClick={() => setShowTerms(false)} aria-label="Close" className="text-white/70 hover:text-white text-xl">&times;</button>
+            </div>
+            <div className="px-6 py-5 text-sm text-ink/80 space-y-3 leading-relaxed">
+              <p>Check in from {checkInTime}. Check out by {checkOutTime}.</p>
+              {((roomSlug && roomTerms[roomSlug]) || terms)
+                .split("\n").filter(Boolean).map((line, i) => <p key={i}>{line}</p>)}
+              {!terms && !(roomSlug && roomTerms[roomSlug]) && (
+                <p className="text-ink/50">
+                  Please call us on {phone} if you have any questions about your booking.
+                </p>
+              )}
+            </div>
+            <div className="px-6 pb-5">
+              <button type="button"
+                onClick={() => { setAcceptedTerms(true); setShowTerms(false); }}
+                className="btn-brand w-full text-center">
+                I accept
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

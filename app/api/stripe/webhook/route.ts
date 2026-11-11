@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { confirmFromSession, getStripe, stripeConfigured } from "@/lib/stripe";
+import { notifyHotel, sendBookingReceived } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,12 @@ export async function POST(req: Request) {
 
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
     const session = event.data.object as Stripe.Checkout.Session;
-    await confirmFromSession(session.id);
+    const booking = await confirmFromSession(session.id);
+    // Only on the first settle, so a repeated webhook does not email twice.
+    if (booking && !booking.guestEmailsSent.includes("received")) {
+      await sendBookingReceived(booking.id);
+      await notifyHotel(booking.id);
+    }
   }
 
   if (event.type === "checkout.session.expired") {

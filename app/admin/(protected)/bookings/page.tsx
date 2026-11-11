@@ -7,6 +7,7 @@ import { Card } from "@/components/admin/fields";
 export const dynamic = "force-dynamic";
 
 const TABS = [
+  { key: "awaiting", label: "To approve" },
   { key: "upcoming", label: "Upcoming" },
   { key: "past", label: "Past" },
   { key: "cancelled", label: "Cancelled" },
@@ -20,11 +21,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
   const today = todayUK();
 
   const where =
-    show === "past" ? { status: "confirmed", checkOut: { lte: today } }
-    : show === "cancelled" ? { status: "cancelled" }
+    show === "awaiting" ? { status: "awaiting_approval" }
+    : show === "past" ? { status: "confirmed", checkOut: { lte: today } }
+    : show === "cancelled" ? { status: { in: ["cancelled", "declined"] } }
     : { status: "confirmed", checkOut: { gt: today } };
 
-  const [bookings, arrivingToday, inHouse, next30Revenue] = await Promise.all([
+  const [bookings, arrivingToday, inHouse, next30Revenue, awaiting] = await Promise.all([
     prisma.booking.findMany({
       where,
       include: { room: true, unit: true },
@@ -37,6 +39,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
       _sum: { total: true },
       where: { status: "confirmed", checkIn: { gte: today, lt: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) } },
     }),
+    prisma.booking.count({ where: { status: "awaiting_approval" } }),
   ]);
 
   return (
@@ -68,6 +71,14 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         </p>
       )}
 
+      {awaiting > 0 && (
+        <Link href="/admin/bookings?show=awaiting"
+          className="block mb-5 rounded-md bg-gold text-navy px-4 py-3 font-semibold hover:brightness-95">
+          {awaiting} booking{awaiting === 1 ? "" : "s"} waiting for you to approve. Nothing has been
+          charged to {awaiting === 1 ? "that guest" : "those guests"} yet.
+        </Link>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-3 mb-6">
         <Stat n={String(arrivingToday)} label="arriving today" />
         <Stat n={String(inHouse)} label="staying tonight" />
@@ -78,7 +89,7 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
         {TABS.map((t) => (
           <Link key={t.key} href={`/admin/bookings?show=${t.key}`}
             className={`px-3 py-1.5 rounded-md ${show === t.key ? "bg-navy text-white" : "text-ink/60 hover:text-navy"}`}>
-            {t.label}
+            {t.label}{t.key === "awaiting" && awaiting > 0 ? ` (${awaiting})` : ""}
           </Link>
         ))}
       </div>

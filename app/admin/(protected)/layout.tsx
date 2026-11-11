@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { logoutAction } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
+import { sendDueReviewEmails } from "@/lib/review-emails";
 
 export const dynamic = "force-dynamic";
 
@@ -14,9 +15,12 @@ const NAV: { heading?: string; href?: string; label?: string; builtinOnly?: bool
   { href: "/admin/booking-system", label: "Booking System" },
   { href: "/admin/bookings", label: "Bookings", builtinOnly: true },
   { href: "/admin/calendar", label: "Calendar", builtinOnly: true },
-  { href: "/admin/rates", label: "Rates & Discounts", builtinOnly: true },
-  { href: "/admin/meal-plans", label: "Meal Plans & Offers", builtinOnly: true },
+  { href: "/admin/rates", label: "Rates & Offers", builtinOnly: true },
+  { href: "/admin/meal-plans", label: "Meal Plans", builtinOnly: true },
   { href: "/admin/promo-codes", label: "Discount Codes", builtinOnly: true },
+  { href: "/admin/booking-rules", label: "Booking Rules", builtinOnly: true },
+  { href: "/admin/review-emails", label: "Guest Emails", builtinOnly: true },
+  { href: "/admin/marketing", label: "Marketing List", builtinOnly: true },
   { href: "/admin/channel-sync", label: "Channel Sync", builtinOnly: true },
   { heading: "Website" },
   { href: "/admin/pages", label: "Pages" },
@@ -36,8 +40,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     prisma.siteSettings.findUnique({ where: { id: 1 }, select: { bookingMode: true } }),
   ]);
   const builtin = (settings?.bookingMode ?? "builtin") === "builtin";
+
+  // Nudge the review emails along. Never blocks the page or breaks it.
+  sendDueReviewEmails().catch(() => {});
   const nav = NAV.filter((n) => !n.builtinOnly || builtin);
-  const badges: Record<string, number> = { "/admin/messages": unread, "/admin/bookings": newBookings };
+  const awaiting = await prisma.booking.count({ where: { status: "awaiting_approval" } });
+  const badges: Record<string, number> = {
+    "/admin/messages": unread,
+    "/admin/bookings": awaiting || newBookings,
+  };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-cream/40">

@@ -67,7 +67,27 @@ model SiteSettings {
   //   "builtin"  - the website's own booking engine and Stripe payments
   //   "phone"    - no online booking, point guests at the phone
   // Only one can be on at a time, so two systems never sell the same room.
-  bookingMode   String  @default("innroad")
+  bookingMode   String  @default("builtin")
+
+  // Taking bookings
+  bookingOpen       Boolean @default(true)
+  bookingClosedNote String  @default("Online booking is closed at the moment. Please call us and we will be glad to help.")
+  requireApproval   Boolean @default(true)  // the hotel confirms each booking by hand
+  checkInTime       String  @default("3pm")
+  checkOutTime      String  @default("11am")
+  termsText         String  @default("")    // applies to every booking
+  marketingOptInText String @default("Email me occasional offers and news from The Paddocks Hotel. We never share your details.")
+
+  // Google review request, sent the day after a guest checks out
+  reviewEmailEnabled Boolean @default(false)
+  googleReviewUrl    String  @default("")
+  reviewEmailDelay   Int     @default(1)    // days after checkout
+  reviewEmailSubject String  @default("How was your stay at The Paddocks Hotel?")
+  reviewEmailBody    String  @default("")   // blank = use the built in wording
+
+  // Email sending (the address guests see; the password lives in Plesk)
+  emailFromName  String @default("The Paddocks Hotel")
+  emailFromAddr  String @default("")        // blank = use the hotel's contact email
   innRoadUrl    String  @default("https://paddockshotel.client.innroad.com")
   // Off by default: innRoad's booking engine sits behind a Cloudflare
   // Turnstile bot check, which is more likely to fail inside a frame than
@@ -130,6 +150,9 @@ model Room {
   bookable    Boolean @default(true)
   basePrice   Int     @default(0)   // pence per night, before any date discount
   maxGuests   Int     @default(2)
+  bedType     String  @default("")  // e.g. "1 double bed", "2 single beds"
+  termsText   String  @default("")  // overrides the hotel wide terms when set
+  images      RoomImage[]
   units       RoomUnit[]
   bookings    Booking[]
 
@@ -138,6 +161,19 @@ model Room {
   keywords        String @default("")
 
   updatedAt DateTime @updatedAt
+}
+
+// ── Extra photos for a room, shown as a gallery ──
+model RoomImage {
+  id      String @id @default(cuid())
+  roomId  String
+  url     String
+  caption String @default("")
+  order   Int    @default(0)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
 }
 
 // ── Explore: cards linking out to things to do in the local area ──
@@ -281,9 +317,18 @@ model Booking {
   total         Int   @default(0)
   breakdownJson String @default("[]") // per-night prices, for the receipt
 
-  // pending = waiting for payment (holds the room until expiresAt)
-  // confirmed = paid | cancelled | expired
+  // pending          = guest is paying, room held until expiresAt
+  // awaiting_approval = card authorised, waiting for the hotel to confirm
+  // confirmed        = approved and charged
+  // declined         = the hotel turned it down, authorisation released
+  // cancelled | expired
   status        String   @default("pending")
+  marketingOptIn Boolean @default(false)
+  termsAcceptedAt DateTime?
+  approvedAt      DateTime?
+  declinedReason  String   @default("")
+  reviewEmailSentAt DateTime?
+  guestEmailsSent   String  @default("")  // which emails have gone out
   source        String   @default("website") // "website" | "phone"
   expiresAt     DateTime?
   stripeSessionId String @default("")
@@ -300,10 +345,16 @@ model Booking {
   @@index([status])
 }
 
-// A discount (or price) that applies to nights in a date range.
+// A discount (or price) that applies to nights in a date range. Tick
+// showOnSite and it also appears to guests as an offer.
 model PriceRule {
   id        String  @id @default(cuid())
   name      String                 // e.g. "Winter midweek"
+  showOnSite  Boolean @default(false)
+  badge       String  @default("")  // e.g. "Weekend Deal"
+  description String  @default("")  // the wording guests read
+  image       String  @default("")
+  mealPlanId  String  @default("")  // a meal plan included in the offer
   roomId    String?                // null = every room type
   start     String                 // first night it applies to
   end       String                 // last night it applies to (inclusive)

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ImageField } from "@/components/admin/fields";
 import { formatDate, money } from "@/lib/booking";
 import { saveRoomRatesAction, savePriceRuleAction, deletePriceRuleAction } from "@/lib/booking-actions";
 import { Card, ErrorBanner, SavedBanner } from "@/components/admin/fields";
@@ -17,9 +18,10 @@ function describe(kind: string, value: number) {
 export default async function RatesPage({ searchParams }:
   { searchParams: Promise<{ saved?: string; error?: string; edit?: string }> }) {
   const { saved, error, edit } = await searchParams;
-  const [rooms, rules] = await Promise.all([
+  const [rooms, rules, mealPlans] = await Promise.all([
     prisma.room.findMany({ orderBy: { order: "asc" }, include: { _count: { select: { units: true } } } }),
     prisma.priceRule.findMany({ orderBy: [{ active: "desc" }, { start: "asc" }] }),
+    prisma.mealPlan.findMany({ where: { active: true }, orderBy: { order: "asc" } }),
   ]);
   const editing = rules.find((r) => r.id === edit);
 
@@ -87,6 +89,11 @@ export default async function RatesPage({ searchParams }:
               <div>
                 <p className="font-medium text-navy">
                   {r.name} {!r.active && <span className="text-xs text-ink/40">(off)</span>}
+                  {r.showOnSite && (
+                    <span className="ml-2 text-[10px] font-bold uppercase bg-gold text-navy rounded px-1.5 py-0.5">
+                      {r.badge || "Shown to guests"}
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-ink/60">
                   {describe(r.kind, r.value)} · {formatDate(r.start, { day: "numeric", month: "short", year: "numeric" })} to{" "}
@@ -171,6 +178,39 @@ export default async function RatesPage({ searchParams }:
             <input type="checkbox" name="active" defaultChecked={editing?.active ?? true} className="w-4 h-4 accent-[var(--navy)]" />
             Switched on
           </label>
+
+          <div className="border-t border-black/10 pt-4 space-y-4">
+            <label className="flex items-start gap-2 text-sm text-navy">
+              <input type="checkbox" name="showOnSite" defaultChecked={editing?.showOnSite ?? false} className="w-4 h-4 mt-0.5 accent-[var(--navy)]" />
+              <span>
+                Advertise this as an offer on the website
+                <span className="block text-xs text-ink/50">
+                  It appears on the booking page and the home page as a deal guests can see, instead
+                  of a discount that quietly applies. The price drops either way.
+                </span>
+              </span>
+            </label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="block font-medium text-navy mb-1">Badge</span>
+                <input name="badge" defaultValue={editing?.badge} placeholder="e.g. Weekend Deal" className={`${input} w-full`} />
+              </label>
+              <label className="block text-sm">
+                <span className="block font-medium text-navy mb-1">Include a meal plan</span>
+                <select name="mealPlanId" defaultValue={editing?.mealPlanId || ""} className={`${input} w-full`}>
+                  <option value="">No meals included</option>
+                  {mealPlans.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <span className="block text-xs text-ink/50 mt-1">Mentioned in the offer. Guests still pick their own meals when booking.</span>
+              </label>
+            </div>
+            <label className="block text-sm">
+              <span className="block font-medium text-navy mb-1">Wording guests read</span>
+              <textarea name="description" defaultValue={editing?.description} rows={2} className={`${input} w-full`}
+                placeholder="e.g. Stay Friday and Saturday and save 20%, with breakfast included." />
+            </label>
+            <ImageField label="Offer photo (optional)" name="imageFile" current={editing?.image} />
+          </div>
           <div className="flex gap-3">
             <button className="bg-navy text-white font-semibold rounded-md px-5 py-2.5 hover:bg-navy/90">
               {editing ? "Save discount" : "Add discount"}

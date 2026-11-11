@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/data";
 import { pageMetadata } from "@/lib/seo";
 import { stripeConfigured } from "@/lib/stripe";
+import { todayUK } from "@/lib/booking";
 import { innRoadLink, looksLikeUrl } from "@/lib/innroad";
 
 export const dynamic = "force-dynamic";
@@ -124,13 +125,39 @@ export default async function BookPage({ searchParams }:
   }
 
   // ── The website's own booking engine ──
-  const [rooms, mealPlans] = await Promise.all([
+
+  // Booking switched off by the hotel.
+  if (!s.bookingOpen) {
+    return (
+      <>
+        {header}
+        <section className="bg-white">
+          <div className="mx-auto max-w-2xl px-6 py-20 text-center">
+            <p className="text-lg text-ink/80">{s.bookingClosedNote}</p>
+            <p className="mt-6 text-ink/70">
+              <a href={`tel:${s.phone.replace(/\s/g, "")}`} className="underline text-navy">{s.phone}</a>
+              {" · "}
+              <a href={`mailto:${s.email}`} className="underline text-navy">{s.email}</a>
+            </p>
+          </div>
+        </section>
+      </>
+    );
+  }
+
+  const today = todayUK();
+  const [rooms, mealPlans, offers] = await Promise.all([
     prisma.room.findMany({
       where: { bookable: true, basePrice: { gt: 0 }, units: { some: { active: true } } },
       orderBy: { order: "asc" },
     }),
     prisma.mealPlan.findMany({ where: { active: true }, orderBy: { order: "asc" } }),
+    prisma.priceRule.findMany({
+      where: { active: true, showOnSite: true, end: { gte: today } },
+      orderBy: { start: "asc" },
+    }),
   ]);
+  const roomById = new Map(rooms.map((r) => [r.id, r.slug]));
 
   return (
     <>
@@ -140,17 +167,27 @@ export default async function BookPage({ searchParams }:
           <BookingWidget
             rooms={rooms.map((r) => ({
               slug: r.slug, name: r.name, image: r.heroImage, maxGuests: r.maxGuests,
-              basePrice: r.basePrice, shortDesc: r.shortDesc,
+              basePrice: r.basePrice, shortDesc: r.shortDesc, bedType: r.bedType,
             }))}
             mealPlans={mealPlans.map((m) => ({
               id: m.id, name: m.name, description: m.description,
               breakfast: m.breakfast, lunch: m.lunch, dinner: m.dinner,
               pricePerPerson: m.pricePerPerson, childPrice: m.childPrice,
             }))}
+            offers={offers.map((o) => ({
+              id: o.id, name: o.name, badge: o.badge, description: o.description, image: o.image,
+              roomSlug: o.roomId ? roomById.get(o.roomId) ?? null : null,
+            }))}
             initialRoom={room && rooms.some((r) => r.slug === room) ? room : ""}
             phone={s.phone}
             paymentsOn={stripeConfigured()}
             cancelled={cancelled === "1"}
+            checkInTime={s.checkInTime}
+            checkOutTime={s.checkOutTime}
+            terms={s.termsText}
+            roomTerms={Object.fromEntries(rooms.filter((r) => r.termsText).map((r) => [r.slug, r.termsText]))}
+            marketingText={s.marketingOptInText}
+            requireApproval={s.requireApproval}
           />
         </div>
       </section>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/data";
 import { formatDate, money } from "@/lib/booking";
 import { confirmFromSession, stripeConfigured } from "@/lib/stripe";
+import { notifyHotel, sendBookingReceived } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
@@ -15,7 +16,13 @@ export default async function Confirmed({ searchParams }:
   // Confirm here as well as in the webhook, so it works even if the webhook
   // is not set up yet.
   if (session_id && stripeConfigured()) {
-    try { await confirmFromSession(session_id); } catch (e) { console.error("confirm failed", e); }
+    try {
+      const settled = await confirmFromSession(session_id);
+      if (settled && !settled.guestEmailsSent.includes("received")) {
+        await sendBookingReceived(settled.id);
+        await notifyHotel(settled.id);
+      }
+    } catch (e) { console.error("confirm failed", e); }
   }
 
   const booking = ref

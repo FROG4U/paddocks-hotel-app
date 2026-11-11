@@ -6,7 +6,9 @@ import { prisma } from "./prisma";
 import { getSession } from "./auth";
 import { daysBetween, freeUnits, isDate, newReference, quote, todayUK } from "./booking";
 import { syncUnit } from "./ical";
-import { getStripe, stripeConfigured } from "./stripe";
+import { capturePayment, getStripe, releasePayment, stripeConfigured } from "./stripe";
+import { saveUploadedImage, UploadError } from "./upload";
+import { sendBookingApproved, sendBookingDeclined, sendEmail, sendReviewRequest } from "./email";
 
 async function requireAuth() {
   const s = await getSession();
@@ -28,6 +30,21 @@ const pence = (fd: FormData, k: string) => {
   const n = parseFloat(str(fd, k).replace(/[£,\s]/g, ""));
   return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
 };
+
+function file(fd: FormData, key: string): File | null {
+  const v = fd.get(key);
+  return v instanceof File && v.size > 0 ? v : null;
+}
+
+/** Save an uploaded photo, sending the user back with a message if it fails. */
+async function tryUpload(f: File | null, baseName: string, backTo: string) {
+  try {
+    return await saveUploadedImage(f, baseName);
+  } catch (e) {
+    const msg = e instanceof UploadError ? e.message : "That image could not be saved.";
+    redirect(`${backTo}?error=${encodeURIComponent(msg)}`);
+  }
+}
 
 function back(path: string, params: Record<string, string>): never {
   const q = new URLSearchParams(params).toString();
@@ -103,6 +120,8 @@ export async function savePriceRuleAction(fd: FormData) {
   if (value <= 0) back("/admin/rates", { error: "Please enter the discount amount." });
 
   const weekdays = [0, 1, 2, 3, 4, 5, 6].filter((d) => on(fd, `day_${d}`));
+  const image = await tryUpload(file(fd, "imageFile"), `offer-${str(fd, "name")}`, "/admin/rates");
+
   const data = {
     name: str(fd, "name"),
     roomId: str(fd, "roomId") || null,
@@ -110,6 +129,11 @@ export async function savePriceRuleAction(fd: FormData) {
     weekdays: weekdays.length === 7 || weekdays.length === 0 ? "" : weekdays.join(","),
     minNights: Math.max(1, int(fd, "minNights", 1)),
     active: on(fd, "active"),
+    showOnSite: on(fd, "showOnSite"),
+    badge: str(fd, "badge"),
+    description: str(fd, "description"),
+    mealPlanId: str(fd, "mealPlanId"),
+    ...(image ? { image } : {}),
   };
   if (id) await prisma.priceRule.update({ where: { id }, data });
   else await prisma.priceRule.create({ data });
@@ -343,4 +367,149 @@ export async function saveBookingModeAction(fd: FormData) {
   });
   revalidatePath("/", "layout");
   back("/admin/booking-system", str(fd, "test") === "1" ? { saved: "1", tested: "1" } : { saved: "1" });
+}
+
+// ── Approving bookings ────────────────────────────────────────────────
+
+/** Confirm a booking and take the money that was held on the guest's card. */
+export async function approveBookingAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const booking = await prisma.booking.findUnique({ where: { id } });
+  if (!booking) back("/admin/bookings", {});
+  if (booking!.status !== "awaiting_approval") back(`/admin/bookings/${id}`, {});
+
+  // Take the payment first: if the card fails, the booking stays pending
+  // rather than being confirmed with no money behind it.
+  if (booking!.stripePaymentId && booking!.total > 0 && stripeConfigured()) {
+    try {
+      await capturePayment(booking!.stripePaymentId);
+    } catch (e) {
+      back(`/admin/bookings/${id}`, {
+        error: `The card could not be charged: ${e instanceof Error ? e.message : "unknown error"}. ` +
+          "The booking has not been approved. The authorisation may have expired, in which case call the guest for new card details.",
+      });
+    }
+  }
+
+  await prisma.booking.update({
+    where: { id },
+    data: { status: "confirmed", approvedAt: new Date() },
+  });
+  sendBookingApproved(id).catch(() => {});
+  revalidatePath("/", "layout");
+  back(`/admin/bookings/${id}`, { approved: "1" });
+}
+
+/** Turn a booking down and release the hold on the guest's card. */
+export async function declineBookingAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const booking = await prisma.booking.findUnique({ where: { id } });
+  if (!booking) back("/admin/bookings", {});
+
+  if (booking!.stripePaymentId && stripeConfigured()) {
+    // Releasing can fail if it was already taken; the guest still gets told.
+    try { await releasePayment(booking!.stripePaymentId); } catch { /* already settled */ }
+  }
+
+  await prisma.booking.update({
+    where: { id },
+    data: { status: "declined", declinedReason: str(fd, "reason"), expiresAt: null },
+  });
+  sendBookingDeclined(id).catch(() => {});
+  revalidatePath("/", "layout");
+  back(`/admin/bookings/${id}`, { declined: "1" });
+}
+
+/** Send one guest their review request by hand. */
+export async function sendReviewNowAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const ok = await sendReviewRequest(id);
+  back(`/admin/bookings/${id}`, ok ? { reviewsent: "1" } : { error: "That email could not be sent. Check the email settings and that a Google review link is set." });
+}
+
+// ── Booking rules: open or closed, approval, times, terms ─────────────
+export async function saveBookingRulesAction(fd: FormData) {
+  await requireAuth();
+  await prisma.siteSettings.update({
+    where: { id: 1 },
+    data: {
+      bookingOpen: on(fd, "bookingOpen"),
+      bookingClosedNote: str(fd, "bookingClosedNote"),
+      requireApproval: on(fd, "requireApproval"),
+      checkInTime: str(fd, "checkInTime") || "3pm",
+      checkOutTime: str(fd, "checkOutTime") || "11am",
+      termsText: str(fd, "termsText"),
+      marketingOptInText: str(fd, "marketingOptInText"),
+    },
+  });
+  revalidatePath("/", "layout");
+  back("/admin/booking-rules", { saved: "1" });
+}
+
+// ── Review emails ─────────────────────────────────────────────────────
+export async function saveReviewEmailAction(fd: FormData) {
+  await requireAuth();
+  const url = str(fd, "googleReviewUrl");
+  if (url && !/^https?:\/\//i.test(url)) {
+    back("/admin/review-emails", { error: "The review link must start with https://" });
+  }
+  await prisma.siteSettings.update({
+    where: { id: 1 },
+    data: {
+      reviewEmailEnabled: on(fd, "reviewEmailEnabled"),
+      googleReviewUrl: url,
+      reviewEmailDelay: Math.max(0, Math.min(30, int(fd, "reviewEmailDelay", 1))),
+      reviewEmailSubject: str(fd, "reviewEmailSubject"),
+      reviewEmailBody: str(fd, "reviewEmailBody"),
+      emailFromName: str(fd, "emailFromName"),
+      emailFromAddr: str(fd, "emailFromAddr"),
+    },
+  });
+  back("/admin/review-emails", { saved: "1" });
+}
+
+/** Send one test email to the hotel's own address. */
+export async function sendTestEmailAction() {
+  await requireAuth();
+  const s = await prisma.siteSettings.findUnique({ where: { id: 1 } });
+  const ok = await sendEmail({
+    to: s?.email || "",
+    subject: "Test email from your website",
+    heading: "Email is working",
+    body: [
+      "This is a test from the website's admin panel.",
+      "If you can read this, booking confirmations and review requests will reach your guests.",
+    ],
+  });
+  back("/admin/review-emails", ok ? { tested: "1" } : { error: "The test email could not be sent. Check the mailbox settings in Plesk." });
+}
+
+// ── Room pictures ─────────────────────────────────────────────────────
+export async function addRoomImageAction(fd: FormData) {
+  await requireAuth();
+  const roomId = str(fd, "roomId");
+  const room = await prisma.room.findUnique({ where: { id: roomId } });
+  if (!room) back("/admin/rooms", {});
+
+  const url = await tryUpload(file(fd, "imageFile"), `${room!.slug}-photo`, `/admin/rooms/${roomId}`);
+  if (!url) back(`/admin/rooms/${roomId}`, { error: "Please choose a photo to add." });
+
+  const count = await prisma.roomImage.count({ where: { roomId } });
+  await prisma.roomImage.create({
+    data: { roomId, url: url!, caption: str(fd, "caption"), order: count },
+  });
+  revalidatePath("/", "layout");
+  back(`/admin/rooms/${roomId}`, { saved: "1" });
+}
+
+export async function deleteRoomImageAction(fd: FormData) {
+  await requireAuth();
+  const id = str(fd, "id");
+  const img = await prisma.roomImage.findUnique({ where: { id } });
+  await prisma.roomImage.delete({ where: { id } }).catch(() => {});
+  revalidatePath("/", "layout");
+  back(`/admin/rooms/${img?.roomId ?? ""}`, { saved: "1" });
 }
