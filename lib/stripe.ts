@@ -18,7 +18,9 @@ export function stripeConfigured() {
 }
 
 export function stripeTestMode() {
-  return (process.env.STRIPE_SECRET_KEY || "").startsWith("sk_test_");
+  // Covers both full keys (sk_) and restricted keys (rk_), which is what a
+  // site sharing a Stripe account with another business should be using.
+  return /^(sk|rk)_test_/.test(process.env.STRIPE_SECRET_KEY || "");
 }
 
 export function getStripe() {

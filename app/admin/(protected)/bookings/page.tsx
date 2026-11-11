@@ -59,7 +59,12 @@ export default async function BookingsPage({ searchParams }: { searchParams: Pro
             In Plesk open the domain, then Node.js, then Custom environment variables, and add:
           </p>
           <ul className="text-sm text-ink/70 list-disc pl-5 space-y-1">
-            <li><code className="bg-cream px-1 rounded">STRIPE_SECRET_KEY</code> from Stripe, Developers, API keys (starts sk_live_)</li>
+            <li>
+              <code className="bg-cream px-1 rounded">STRIPE_SECRET_KEY</code> from Stripe, Developers, API keys.
+              If the Stripe account is shared with the restaurant, create a restricted key
+              (starts rk_live_) with Checkout Sessions, PaymentIntents and Refunds set to Write,
+              so the restaurant&rsquo;s own key is left alone.
+            </li>
             <li><code className="bg-cream px-1 rounded">STRIPE_WEBHOOK_SECRET</code> from Stripe, Developers, Webhooks (starts whsec_)</li>
           </ul>
           <p className="text-sm text-ink/70">Then restart the app.</p>
