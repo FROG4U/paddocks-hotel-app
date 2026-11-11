@@ -50,12 +50,14 @@ export async function POST(req: NextRequest) {
   // No API key: rather than lose the question, drop it into the Messages
   // inbox so the hotel can follow it up.
   if (!aiConfigured()) {
-    await prisma.message.create({
+    const asked = await prisma.message.create({
       data: {
         name: "Website visitor", subject: "Chat question",
         body: text, source: "chat",
       },
     });
+    const { notifyNewMessage } = await import("@/lib/email");
+    notifyNewMessage(asked.id).catch(() => {});
     return NextResponse.json({
       reply: `Thank you, I have passed that to the team. For anything urgent please call ${s.phone} or email ${s.email}.`,
       conversationId: null,

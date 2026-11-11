@@ -19,9 +19,9 @@ export default async function ReviewEmailsPage({ searchParams }:
 
   return (
     <div>
-      <h1 className="font-display text-3xl text-navy mb-1">Guest Emails</h1>
+      <h1 className="font-display text-3xl text-navy mb-1">Emails</h1>
       <p className="text-ink/60 mb-6">
-        Booking confirmations, and the review request that goes out after a guest checks out.
+        What guests are sent, and what you are told about.
       </p>
       <SavedBanner show={saved === "1"} text="Saved." />
       <SavedBanner show={tested === "1"} text={`Test email sent to ${s.email}. Have a look in that inbox.`} />
@@ -69,6 +69,47 @@ export default async function ReviewEmailsPage({ searchParams }:
               <span className="block text-xs text-ink/50 mt-1">Leave blank to use {s.email}.</span>
             </label>
           </div>
+        </Card>
+
+        <Card title="What you are told about">
+          <label className="block text-sm">
+            <span className="block font-medium text-navy mb-1">Send my notifications to</span>
+            <input name="notifyEmail" defaultValue={s.notifyEmail} placeholder={s.email} className={input} />
+            <span className="block text-xs text-ink/50 mt-1">
+              Leave blank to use {s.email}. Put a different address here if you would rather these
+              went somewhere else, like a phone you check.
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-navy">
+            <input type="checkbox" name="notifyOnBooking" defaultChecked={s.notifyOnBooking} className="w-4 h-4 mt-0.5 accent-[var(--navy)]" />
+            <span>
+              Email me when a booking comes in
+              <span className="block text-xs text-ink/50">
+                With the guest, the dates, the room and the total, and a link straight to it. When
+                you approve bookings yourself, this is how you know one is waiting.
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-navy">
+            <input type="checkbox" name="notifyOnMessage" defaultChecked={s.notifyOnMessage} className="w-4 h-4 mt-0.5 accent-[var(--navy)]" />
+            <span>
+              Email me when someone sends an enquiry
+              <span className="block text-xs text-ink/50">
+                From the contact form, and from the chat window when it is not connected to AI.
+              </span>
+            </span>
+          </label>
+        </Card>
+
+        <Card title="What guests are sent">
+          <ul className="text-sm text-ink/70 list-disc pl-5 space-y-1 -mt-2">
+            <li><strong>When they book</strong> - their request, or their confirmation if you are not approving by hand.</li>
+            <li><strong>When you approve</strong> - confirmed, with the dates, room, times and total.</li>
+            <li><strong>When you decline</strong> - an apology, with your reason if you give one, and a note that nothing was charged.</li>
+            <li><strong>When you cancel a confirmed booking</strong> - with the refund amount if you refunded one. You can turn this off per cancellation.</li>
+            <li><strong>After they check out</strong> - the review request below, if you switch it on.</li>
+          </ul>
+          <p className="text-xs text-ink/50">All in your own colours, from your own address.</p>
         </Card>
 
         <Card title="Google review request">

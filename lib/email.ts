@@ -220,10 +220,12 @@ export async function sendReviewRequest(bookingId: string) {
 /** Tell the hotel a booking has come in. */
 export async function notifyHotel(bookingId: string) {
   const [b, s] = await Promise.all([bookingFor(bookingId), prisma.siteSettings.findUnique({ where: { id: 1 } })]);
-  if (!b || !s?.email) return;
+  if (!b || !s) return;
+  const to = s.notifyEmail || s.email;
+  if (!to || !s.notifyOnBooking) return;
 
   await sendEmail({
-    to: s.email,
+    to,
     subject: `${b.status === "awaiting_approval" ? "Booking to approve" : "New booking"}: ${b.guestName}, ${formatDate(b.checkIn, { day: "numeric", month: "short" })}`,
     heading: b.status === "awaiting_approval" ? "A booking is waiting for your approval" : "New booking",
     body: [
@@ -232,5 +234,50 @@ export async function notifyHotel(bookingId: string) {
       b.notes ? `Their note: ${b.notes}` : "",
     ].filter(Boolean),
     button: { label: "Open the booking", url: `${(s.siteUrl || "").replace(/\/$/, "")}/admin/bookings/${b.id}` },
+  });
+}
+
+/** "Your booking has been cancelled" - sent when the hotel cancels a stay. */
+export async function sendBookingCancelled(bookingId: string, refunded: number) {
+  const [b, s] = await Promise.all([bookingFor(bookingId), prisma.siteSettings.findUnique({ where: { id: 1 } })]);
+  if (!b || !s) return;
+
+  const ok = await sendEmail({
+    to: b.guestEmail,
+    subject: `Your booking has been cancelled - ${b.reference}`,
+    heading: "Your booking has been cancelled",
+    body: [
+      `We are sorry to let you know that your stay on ${formatDate(b.checkIn)} has been cancelled.`,
+      ...stayLines(b, s),
+      refunded > 0
+        ? `We have refunded ${money(refunded)} to the card you paid with. It usually takes three to five working days to appear on your statement.`
+        : "If a refund is due, we will be in touch about it separately.",
+      `If this is not what you expected, please call us on ${s.phone} and we will put it right.`,
+    ],
+  });
+  if (ok) await markSent(bookingId, "cancelled");
+}
+
+/** Tell the hotel somebody has sent an enquiry through the website. */
+export async function notifyNewMessage(messageId: string) {
+  const [m, s] = await Promise.all([
+    prisma.message.findUnique({ where: { id: messageId } }),
+    prisma.siteSettings.findUnique({ where: { id: 1 } }),
+  ]);
+  if (!m || !s) return;
+  const to = s.notifyEmail || s.email;
+  if (!to || !s.notifyOnMessage) return;
+
+  await sendEmail({
+    to,
+    subject: `Website enquiry from ${m.name}${m.subject ? ` about ${m.subject}` : ""}`,
+    heading: "Someone has sent you a message",
+    body: [
+      `<strong>${m.name}</strong>${m.email ? `<br>${m.email}` : ""}${m.phone ? `<br>${m.phone}` : ""}` +
+        `${m.subject ? `<br>About: ${m.subject}` : ""}`,
+      m.body.replace(/\n/g, "<br>"),
+      m.email ? `Reply straight to <a href="mailto:${m.email}">${m.email}</a>.` : "",
+    ].filter(Boolean),
+    button: { label: "Open your inbox", url: `${(s.siteUrl || "").replace(/\/$/, "")}/admin/messages` },
   });
 }

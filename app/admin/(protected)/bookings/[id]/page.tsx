@@ -138,6 +138,10 @@ export default async function BookingDetail({ params, searchParams }: {
             ) : (
               <p className="text-sm text-ink/60">This booking was not paid online, so there is nothing to refund here.</p>
             )}
+            <label className="flex items-center gap-2 text-sm text-ink/70">
+              <input type="checkbox" name="silent" className="w-4 h-4 accent-[var(--navy)]" />
+              Do not email the guest (I will tell them myself)
+            </label>
             <button className="bg-accent text-white font-semibold rounded-md px-5 py-2.5 hover:brightness-95">Cancel booking</button>
           </Card>
         </form>

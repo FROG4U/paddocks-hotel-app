@@ -86,6 +86,11 @@ model SiteSettings {
   reviewEmailBody    String  @default("")   // blank = use the built in wording
 
   // Email sending (the address guests see; the password lives in Plesk)
+  // Who at the hotel gets told, and about what
+  notifyEmail     String  @default("")    // blank = the hotel's contact address
+  notifyOnBooking Boolean @default(true)
+  notifyOnMessage Boolean @default(true)
+
   emailFromName  String @default("The Paddocks Hotel")
   emailFromAddr  String @default("")        // blank = use the hotel's contact email
   innRoadUrl    String  @default("https://paddockshotel.client.innroad.com")

@@ -393,7 +393,7 @@ export async function sendMessageAction(
     return { ok: false, error: "That message is too long. Please keep it under 5000 characters." };
   }
 
-  await prisma.message.create({
+  const created = await prisma.message.create({
     data: {
       name, email,
       phone: str(fd, "phone").trim(),
@@ -402,6 +402,8 @@ export async function sendMessageAction(
       source: "contact",
     },
   });
+  const { notifyNewMessage } = await import("./email");
+  notifyNewMessage(created.id).catch(() => {});
   return { ok: true, error: "" };
 }
 

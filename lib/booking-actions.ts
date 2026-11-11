@@ -8,7 +8,7 @@ import { daysBetween, freeUnits, isDate, newReference, quote, todayUK } from "./
 import { syncUnit } from "./ical";
 import { capturePayment, getStripe, releasePayment, stripeConfigured } from "./stripe";
 import { saveUploadedImage, UploadError } from "./upload";
-import { sendBookingApproved, sendBookingDeclined, sendEmail, sendReviewRequest } from "./email";
+import { sendBookingApproved, sendBookingCancelled, sendBookingDeclined, sendEmail, sendReviewRequest } from "./email";
 
 async function requireAuth() {
   const s = await getSession();
@@ -344,6 +344,8 @@ export async function cancelBookingAction(fd: FormData) {
     where: { id },
     data: { status: "cancelled", refundedAmount: { increment: refunded }, expiresAt: null },
   });
+  // Tell the guest, unless the hotel has chosen to do that themselves.
+  if (!on(fd, "silent")) sendBookingCancelled(id, refunded).catch(() => {});
   revalidatePath("/", "layout");
   back(`/admin/bookings/${id}`, { cancelled: "1" });
 }
@@ -466,6 +468,9 @@ export async function saveReviewEmailAction(fd: FormData) {
       reviewEmailBody: str(fd, "reviewEmailBody"),
       emailFromName: str(fd, "emailFromName"),
       emailFromAddr: str(fd, "emailFromAddr"),
+      notifyEmail: str(fd, "notifyEmail"),
+      notifyOnBooking: on(fd, "notifyOnBooking"),
+      notifyOnMessage: on(fd, "notifyOnMessage"),
     },
   });
   back("/admin/review-emails", { saved: "1" });
