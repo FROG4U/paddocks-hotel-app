@@ -21,6 +21,16 @@ const run = promisify(exec);
  */
 
 const ROOT = process.cwd();
+
+// The website's own repository. Public, so the server needs no password to
+// read it. Overridable in Plesk if it ever moves.
+const REMOTE = process.env.GIT_REMOTE || "https://github.com/FROG4U/paddocks-hotel-app.git";
+
+// Git refuses to work in a folder owned by another user unless told it is
+// safe. On a hosting panel that is routinely the case, so say so every time
+// rather than leaving a confusing failure.
+const q = (v: string) => `'${v.replace(/'/g, "'\\''")}'`;
+const GIT = `git -c safe.directory=${q(ROOT)}`;
 const LOG = () => path.join(ensureDataDir(), "deploy.log");
 const LOCK = () => path.join(ensureDataDir(), "deploy.lock");
 
@@ -74,6 +84,35 @@ async function step(label: string, command: string) {
   }
 }
 
+/** Which version is in place, or nothing at all on a brand new checkout. */
+async function head(): Promise<string> {
+  try {
+    return (await run(`${GIT} rev-parse HEAD`, { cwd: ROOT })).stdout.trim();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Connect this copy of the website to GitHub if it is not already.
+ *
+ * A website put on the server by copying the files up has no connection to
+ * GitHub at all, so there is nothing to fetch. Rather than failing and
+ * leaving somebody to do it by hand over SSH, the first update makes the
+ * connection itself. Nothing is lost doing this: it only adds the link, and
+ * files the repository does not know about, uploaded photos and the like,
+ * are left exactly where they are.
+ */
+async function ensureConnected() {
+  if (fs.existsSync(path.join(ROOT, ".git"))) return true;
+
+  append("\nThis copy of the website has never been connected to GitHub, so the first update has to connect it. Doing that now.");
+  if (!await step("connect to GitHub", `${GIT} -c init.defaultBranch=main init`)) return false;
+  // A half finished earlier attempt may have left one behind.
+  await run(`${GIT} remote remove origin`, { cwd: ROOT }).catch(() => {});
+  return step("point it at the repository", `${GIT} remote add origin ${REMOTE}`);
+}
+
 /**
  * Do the update. Returns as soon as it is under way; follow the log to see
  * how it went. Never throws.
@@ -88,24 +127,43 @@ export async function startDeploy(triggeredBy: string) {
   // Deliberately not awaited: the build outlives the web request.
   (async () => {
     try {
-      // Take exactly what is on GitHub. Safe because live content lives
-      // outside this folder, and it avoids merge conflicts over the
-      // starter database file that git tracks.
-      const fetched = await step("git fetch", "git fetch origin main");
-      if (!fetched) return append("\nCould not reach GitHub. Nothing has changed.");
+      if (!await ensureConnected()) {
+        return append("\nCould not connect the website to GitHub, so nothing has changed. The site is untouched and still online.");
+      }
 
-      const before = (await run("git rev-parse HEAD", { cwd: ROOT })).stdout.trim();
-      if (!await step("git reset", "git reset --hard origin/main")) {
+      // Take exactly what is on GitHub. Safe because live content lives
+      // outside this folder, and because anything the repository does not
+      // track, photos and the database included, is left alone.
+      if (!await step("git fetch", `${GIT} fetch origin main`)) {
+        return append("\nCould not reach GitHub. Nothing has changed.");
+      }
+
+      const before = await head();
+
+      // .env is in the repository, so a reset would replace the server's own
+      // copy. Anything secret that has been added to it by hand would go with
+      // it, so it is put back exactly as it was.
+      const envFile = path.join(ROOT, ".env");
+      let envBefore: string | null = null;
+      try { envBefore = fs.readFileSync(envFile, "utf8"); } catch { /* none */ }
+
+      if (!await step("git reset", `${GIT} reset --hard FETCH_HEAD`)) {
         return append("\nCould not update the code. Nothing has changed.");
       }
-      const after = (await run("git rev-parse HEAD", { cwd: ROOT })).stdout.trim();
 
-      if (before === after) {
+      if (envBefore !== null && fs.readFileSync(envFile, "utf8") !== envBefore) {
+        fs.writeFileSync(envFile, envBefore);
+        append("Kept this server's own .env rather than the one from GitHub.");
+      }
+      const after = await head();
+
+      if (before && before === after) {
         append("\nAlready up to date. The site was not restarted.");
         return;
       }
-      const subject = (await run("git log -1 --format=%s", { cwd: ROOT })).stdout.trim();
-      append(`\nUpdating to: ${subject}`);
+      const subject = await run(`${GIT} log -1 --format=%s`, { cwd: ROOT })
+        .then((r) => r.stdout.trim()).catch(() => "");
+      if (subject) append(`\nUpdating to: ${subject}`);
 
       if (!await step("npm install", "npm install --no-audit --no-fund")) {
         return append("\nInstalling failed, so the site has NOT been changed. It is still running the previous version.");
